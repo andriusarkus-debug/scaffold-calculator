@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scaffold Calculator — Architektūros Diagramos</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #38bdf8;
+      border-bottom: 2px solid #1e3a5f;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #7dd3fc;
+      margin-top: 60px;
+    }
+    .diagram-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 30px;
+      margin-top: 16px;
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Scaffold Calculator — Sistemos Architektūra</h1>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>1. Abstrakti sistemos apžvalga</h2>
+<div class="diagram-box">
+<div class="mermaid">
+graph TD
+    subgraph Klientai
+        WEB[🌐 Web Naršyklė\nHTML/CSS/JS]
+        MOB[📱 Mobile App\nReact Native / Flutter]
+    end
+
+    subgraph Backend["☕ Java Spring Boot API (port 8080)"]
+        AUTH[Auth Layer\nJWT + Spring Security]
+        CTRL[Controllers]
+        SVC[Services\nBusiness Logic]
+        REPO[Repositories\nSpring Data JPA]
+    end
+
+    subgraph DB["🗄️ PostgreSQL"]
+        USERS[(users)]
+        CALCS[(calculations)]
+        LIFTS[(calculation_lifts)]
+    end
+
+    WEB -- "HTTP REST / JSON" --> AUTH
+    MOB -- "HTTP REST / JSON" --> AUTH
+    AUTH --> CTRL
+    CTRL --> SVC
+    SVC --> REPO
+    REPO --> USERS
+    REPO --> CALCS
+    REPO --> LIFTS
+</div>
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>2. Sluoksnių architektūra</h2>
+<div class="diagram-box">
+<div class="mermaid">
+graph LR
+    subgraph Controllers
+        AC[AuthController]
+        CC[CalculatorController]
+        HC[HistoryController]
+        ADC[AdminController]
+    end
+
+    subgraph Services
+        US[UserService]
+        TC[TubeAndCouplerService]
+        GS[GableService]
+        CS[CalculationService]
+        AS[AdminService]
+    end
+
+    subgraph Repositories
+        UR[UserRepository]
+        CR[CalculationRepository]
+    end
+
+    subgraph Database
+        PG[(PostgreSQL)]
+    end
+
+    AC --> US
+    CC --> TC
+    CC --> CS
+    TC --> GS
+    HC --> CS
+    ADC --> AS
+    AS --> UR
+    US --> UR
+    CS --> CR
+    UR --> PG
+    CR --> PG
+</div>
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>3. JWT Autentifikacijos srautas</h2>
+<div class="diagram-box">
+<div class="mermaid">
+sequenceDiagram
+    actor Vartotojas
+    participant API as Spring Boot API
+    participant SEC as JwtAuthFilter
+    participant DB as PostgreSQL
+
+    Vartotojas->>API: POST /api/auth/login {username, password}
+    API->>DB: Rasti vartotoją pagal username
+    DB-->>API: User (passwordHash, role, active)
+    API->>API: BCrypt patikrinimas
+    API->>API: Generuoti JWT (username + role, 24h)
+    API-->>Vartotojas: { token: "eyJ..." }
+
+    Note over Vartotojas,API: Kiekvienas sekantis užklausiamas
+
+    Vartotojas->>SEC: GET /api/history/me\nAuthorization: Bearer eyJ...
+    SEC->>SEC: Patikrinti JWT parašą ir galiojimą
+    SEC->>SEC: Ištraukti username + role
+    SEC->>API: Perduoti užklausą su vartotojo kontekstu
+    API-->>Vartotojas: 200 OK + duomenys
+</div>
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>4. Pagrindinis Use Case — Skaičiavimo srautas</h2>
+<div class="diagram-box">
+<div class="mermaid">
+sequenceDiagram
+    actor Vartotojas
+    participant CTRL as CalculatorController
+    participant TC as TubeAndCouplerService
+    participant GS as GableService
+    participant CS as CalculationService
+    participant DB as PostgreSQL
+
+    Vartotojas->>CTRL: POST /api/calculator/calculate\n{ ScaffoldInput }
+    CTRL->>TC: calculate(input)
+
+    alt RECTANGULAR
+        TC->>TC: 4 sienos, returnCount=4
+    else L_SHAPE
+        TC->>TC: 6 sienos, returnCount=5\n(kampas D be return)
+    end
+
+    TC->>TC: Bays = perimeter / 1.8m
+    TC->>TC: Standards, Ledgers, Transoms
+    TC->>TC: Boards (tik 1 darbo lygis)
+    TC->>TC: Bracing (sway + ledger)
+    TC->>TC: Couplers (visi tipai)
+    TC->>TC: Tube kombinacijos (greedy alg.)
+
+    alt RoofType = GABLE
+        TC->>GS: calculateGable(input)
+        GS-->>TC: gable medžiagos
+    end
+
+    TC-->>CTRL: MaterialResult
+
+    CTRL->>CS: save(input, result, user)
+    CS->>DB: INSERT calculations + lifts
+    DB-->>CS: OK
+
+    CTRL-->>Vartotojas: 200 OK { MaterialResult }
+</div>
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>5. Rolių ir prieigos schema</h2>
+<div class="diagram-box">
+<div class="mermaid">
+graph TD
+    subgraph Endpoints
+        E1[POST /api/auth/register\nPOST /api/auth/login]
+        E2[POST /api/calculator/calculate\nGET /api/history/me]
+        E3[GET /api/history/all]
+        E4[GET /api/admin/users\nPUT /api/admin/users/id/role\nPUT /api/admin/users/id/active]
+    end
+
+    subgraph Rolės
+        PUB[🌍 Visi\nbe tokeno]
+        USER[👤 ROLE_USER]
+        MGR[👥 ROLE_MANAGER]
+        ADM[🔐 ROLE_ADMIN]
+    end
+
+    PUB --> E1
+    USER --> E2
+    MGR --> E2
+    MGR --> E3
+    ADM --> E2
+    ADM --> E3
+    ADM --> E4
+</div>
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>6. Duomenų bazės schema</h2>
+<div class="diagram-box">
+<div class="mermaid">
+erDiagram
+    users {
+        bigint id PK
+        varchar username
+        varchar email
+        varchar password_hash
+        varchar role
+        boolean active
+        timestamp created_at
+    }
+
+    calculations {
+        bigint id PK
+        bigint user_id FK
+        varchar project_name
+        varchar house_shape
+        double house_length
+        double house_width
+        varchar roof_type
+        int lift_count
+        int bays
+        double perimeter
+        text material_results
+        timestamp created_at
+    }
+
+    calculation_lifts {
+        bigint id PK
+        bigint calculation_id FK
+        int lift_number
+        double height
+        boolean has_boards
+    }
+
+    users ||--o{ calculations : "turi"
+    calculations ||--o{ calculation_lifts : "turi"
+</div>
+</div>
+
+<br/><br/>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+</script>
+</body>
+</html>
