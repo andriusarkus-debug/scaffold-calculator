@@ -18,20 +18,14 @@ graph TD
         REPO[Repositories\nSpring Data JPA]
     end
 
-    subgraph DB["PostgreSQL"]
-        USERS[(users)]
-        CALCS[(calculations)]
-        LIFTS[(calculation_lifts)]
-    end
+    PG[("PostgreSQL\n─────────────\ntable: users\ntable: calculations\ntable: calculation_lifts")]
 
     WEB -- "HTTP REST / JSON" --> AUTH
     MOB -- "HTTP REST / JSON" --> AUTH
     AUTH --> CTRL
     CTRL --> SVC
     SVC --> REPO
-    REPO --> USERS
-    REPO --> CALCS
-    REPO --> LIFTS
+    REPO --> PG
 ```
 
 ---
