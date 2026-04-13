@@ -12,29 +12,27 @@ import java.util.List;
 @Data
 public class ScaffoldInput {
 
-    private String projectName;     // Projekto pavadinimas (pvz. "Jonų namas")
+    private String projectName;     
 
-    private HouseShape houseShape;  // Namo forma: RECTANGULAR arba L_SHAPE
+    private HouseShape houseShape;
 
-    private double houseLength;     // Namo ilgis metrais (bendra išorinė matmuo)
-    private double houseWidth;      // Namo plotis metrais (bendra išorinė matmuo)
+    private double houseLength;
+    private double houseWidth;
 
-    // L formos namo papildomi matmenys — naudojami tik kai houseShape = L_SHAPE
-    private double lCutLength;      // L išpjovos ilgis metrais (horizontali matmuo)
-    private double lCutWidth;       // L išpjovos plotis metrais (vertikali matmuo)
+
+    private double lCutLength;
+    private double lCutWidth;
 
     private List<LiftInput> lifts;
 
 
     private RoofType roofType;
 
-    private double roofPitch;       // Stogo nuolydis laipsniais — naudojamas tik GABLE tipo stogui
-    private int gableEnds;          // Frontonų skaičius (1 arba 2) — naudojamas tik GABLE tipo stogui
+    private double roofPitch;
+    private int gableEnds;
 
-    private TubeSize tubeSize;      // Pasirinktas vamzdžio ilgis — naudojamas stovų (standards) gabalų skaičiui
+    private TubeSize tubeSize;
 
-    // Ledgerių scenarijus — nustato kurių sienų ledgeriai viršuje ties kampais.
-    // Viršutinis ledgeris ties kampu veikia kaip transonas (taupo 2 transonus per kampą).
-    // Jei nenurodytas — naudojamas SCENARIO_ONE pagal nutylėjimą.
+
     private LedgerScenario ledgerScenario;
 }
