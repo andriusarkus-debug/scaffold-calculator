@@ -226,20 +226,19 @@ import java.util.stream.Collectors;
         // Handrailai — tas pats bay skaičius, bet × 2 (top + mid rail) × liftai (ne lifts+1)
         int handrails = ledgersPerLevel * 2 * lifts;
 
-        // --- 9. Sway bracing — kas 6 bays kiekvienai sienai, kiekviename lifte (× 2 pusės) ---
+        // --- 9. Sway bracing — 1 brace every 6 bays per face per lift ---
         int swayBracingSets = 0;
         for (double wallLength : faceLengths) {
             int faceBays = (int) Math.ceil(wallLength / BAY_SPACING);
             swayBracingSets += (int) Math.ceil(faceBays / 6.0);
         }
-        int swayBracing = swayBracingSets * lifts * 2;
+        int swayBracing = swayBracingSets * lifts;
 
-        // --- 10. Ledger bracing — "kas antra" modelis kiekvienai sienai, kiekviename lifte ---
-        // Formulė vienai sienai: ceil((faceBays + 1) / 2)
+        // --- 10. Ledger bracing — 1 brace every 2 bays per face per lift ---
         int bracesPerLift = 0;
         for (double wallLength : faceLengths) {
             int faceBays = (int) Math.ceil(wallLength / BAY_SPACING);
-            bracesPerLift += (int) Math.ceil((faceBays + 1) / 2.0);
+            bracesPerLift += (int) Math.ceil(faceBays / 2.0);
         }
         int ledgerBracing = bracesPerLift * lifts;
 
