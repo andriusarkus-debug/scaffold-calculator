@@ -2,6 +2,7 @@ package com.scaffold.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.scaffold.entity.converter.MapToJsonConverter;
+import com.scaffold.entity.converter.MapStringToJsonConverter;
 import com.scaffold.model.enums.HouseShape;
 import com.scaffold.model.enums.LedgerScenario;
 import com.scaffold.model.enums.RoofType;
@@ -139,4 +140,13 @@ public class Calculation {
     @Convert(converter = MapToJsonConverter.class)
     @Column(columnDefinition = "TEXT")
     private Map<String, Integer> standardTubeSummary;
+
+    // --- Per-wall breakdowns ---
+    @Convert(converter = MapStringToJsonConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private Map<String, String> faceLedgerTubeBreakdown;
+
+    @Convert(converter = MapStringToJsonConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private Map<String, String> faceBoardBreakdown;
 }

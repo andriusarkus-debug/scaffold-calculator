@@ -84,6 +84,8 @@ public class CalculationService {
                 .handrailTubeSummary(result.getHandrailTubeSummary())
                 .ledgerBraceTubeSummary(result.getLedgerBraceTubeSummary())
                 .standardTubeSummary(result.getStandardTubeSummary())
+                .faceLedgerTubeBreakdown(result.getFaceLedgerTubeBreakdown())
+                .faceBoardBreakdown(result.getFaceBoardBreakdown())
                 .build();
 
         // Sukuriame liftų sąrašą ir susiejame su skaičiavimu
