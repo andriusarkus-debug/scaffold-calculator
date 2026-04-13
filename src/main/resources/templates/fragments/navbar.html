@@ -2,26 +2,22 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark px-3 px-lg-4"
-     style="background:linear-gradient(135deg,#2e1065 0%,#5b21b6 100%);box-shadow:0 2px 16px rgba(91,33,182,.4);">
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark sticky-top px-3 px-lg-4"
+     style="background:linear-gradient(135deg,#2e1065 0%,#5b21b6 100%);box-shadow:0 2px 24px rgba(91,33,182,.45);backdrop-filter:blur(8px);">
 
   <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-decoration-none" href="/calculator">
-    <!-- Scaffold SVG logo -->
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Vertical standards -->
       <rect x="4"  y="4" width="3" height="24" rx="1.5" fill="#c4b5fd"/>
       <rect x="14.5" y="4" width="3" height="24" rx="1.5" fill="#c4b5fd"/>
       <rect x="25" y="4" width="3" height="24" rx="1.5" fill="#c4b5fd"/>
-      <!-- Horizontal ledgers -->
       <rect x="4" y="7"  width="24" height="2.5" rx="1.25" fill="white"/>
       <rect x="4" y="14" width="24" height="2.5" rx="1.25" fill="white"/>
       <rect x="4" y="21" width="24" height="2.5" rx="1.25" fill="white"/>
-      <!-- Base plates -->
       <rect x="2"  y="27" width="7" height="2" rx="1" fill="#a78bfa"/>
       <rect x="12.5" y="27" width="7" height="2" rx="1" fill="#a78bfa"/>
       <rect x="23" y="27" width="7" height="2" rx="1" fill="#a78bfa"/>
     </svg>
-    <span style="color:white;letter-spacing:.03em;">ScaffoldCalc</span>
+    <span style="color:white;letter-spacing:.03em;font-size:1.05rem;">ScaffoldCalc</span>
   </a>
 
   <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
@@ -29,43 +25,57 @@
   </button>
 
   <div class="collapse navbar-collapse" id="navMain">
-    <ul class="navbar-nav me-auto gap-1">
+    <ul class="navbar-nav me-auto gap-1 mt-2 mt-lg-0">
       <li class="nav-item">
-        <a class="nav-link d-flex align-items-center gap-1 px-3 py-2 rounded" href="/calculator">
-          <i class="bi bi-calculator"></i> Calculator
+        <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2" href="/calculator"
+           style="transition:background .18s,color .18s;"
+           onmouseover="this.style.background='rgba(255,255,255,.12)'"
+           onmouseout="this.style.background='transparent'">
+          <i class="bi bi-calculator-fill"></i> Calculator
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link d-flex align-items-center gap-1 px-3 py-2 rounded" href="/history">
+        <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2" href="/history"
+           style="transition:background .18s,color .18s;"
+           onmouseover="this.style.background='rgba(255,255,255,.12)'"
+           onmouseout="this.style.background='transparent'">
           <i class="bi bi-clock-history"></i> My History
         </a>
       </li>
       <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_MANAGER','ROLE_ADMIN')">
-        <a class="nav-link d-flex align-items-center gap-1 px-3 py-2 rounded" href="/history/all">
-          <i class="bi bi-people"></i> All Calculations
+        <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2" href="/history/all"
+           style="transition:background .18s,color .18s;"
+           onmouseover="this.style.background='rgba(255,255,255,.12)'"
+           onmouseout="this.style.background='transparent'">
+          <i class="bi bi-people-fill"></i> All Calculations
         </a>
       </li>
       <li class="nav-item" sec:authorize="hasAuthority('ROLE_ADMIN')">
-        <a class="nav-link d-flex align-items-center gap-1 px-3 py-2 rounded" href="/admin/users">
-          <i class="bi bi-shield-check"></i> Admin
+        <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2" href="/admin/users"
+           style="transition:background .18s,color .18s;"
+           onmouseover="this.style.background='rgba(255,255,255,.12)'"
+           onmouseout="this.style.background='transparent'">
+          <i class="bi bi-shield-fill-check"></i> Admin
         </a>
       </li>
     </ul>
 
-    <ul class="navbar-nav align-items-center gap-2">
+    <ul class="navbar-nav align-items-center gap-2 mt-2 mt-lg-0">
       <li class="nav-item" sec:authorize="isAuthenticated()">
-        <span class="d-flex align-items-center gap-2">
-          <i class="bi bi-person-circle" style="color:#c4b5fd;font-size:1.1rem;"></i>
-          <span class="text-light small" sec:authentication="name"></span>
-          <span class="badge rounded-pill ms-1"
-                style="background:rgba(196,181,253,.2);color:#c4b5fd;font-size:.7rem;letter-spacing:.04em;"
+        <span class="d-flex align-items-center gap-2 px-2">
+          <i class="bi bi-person-circle" style="color:#c4b5fd;font-size:1.2rem;"></i>
+          <span class="text-light small fw-medium" sec:authentication="name"></span>
+          <span class="badge rounded-pill"
+                style="background:rgba(196,181,253,.18);color:#e9d5ff;font-size:.68rem;letter-spacing:.05em;border:1px solid rgba(196,181,253,.3);"
                 th:text="${#authentication.getPrincipal().getAuthorities().iterator().next().getAuthority().replace('ROLE_','')}"></span>
         </span>
       </li>
       <li class="nav-item">
         <form th:action="@{/logout}" method="post" class="d-inline">
           <button type="submit" class="btn btn-sm d-flex align-items-center gap-1"
-                  style="background:rgba(255,255,255,.1);color:#e9d5ff;border:1px solid rgba(255,255,255,.2);border-radius:8px;">
+                  style="background:rgba(255,255,255,.1);color:#e9d5ff;border:1px solid rgba(255,255,255,.2);border-radius:8px;transition:all .18s;font-size:.85rem;"
+                  onmouseover="this.style.background='rgba(255,255,255,.2)'"
+                  onmouseout="this.style.background='rgba(255,255,255,.1)'">
             <i class="bi bi-box-arrow-right"></i> Sign out
           </button>
         </form>
