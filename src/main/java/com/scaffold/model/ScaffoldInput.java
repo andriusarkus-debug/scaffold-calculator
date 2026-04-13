@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 public class ScaffoldInput {
 
-    private String projectName;     
+    private String projectName;
 
     private HouseShape houseShape;
 

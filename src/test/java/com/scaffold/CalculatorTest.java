@@ -68,8 +68,8 @@ public class CalculatorTest {
         ScaffoldInput input = new ScaffoldInput();
         input.setProjectName("Two lifts test");
         input.setHouseShape(HouseShape.RECTANGULAR);
-        input.setHouseLength(10.0);
-        input.setHouseWidth(7.0);
+        input.setHouseLength(12.0);
+        input.setHouseWidth(12.0);
         input.setRoofType(RoofType.HIP);
         input.setTubeSize(TubeSize.THIRTEEN_FOOT);
 
