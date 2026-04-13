@@ -174,6 +174,8 @@ graph TD
 
 ## 6. Database Schema
 
+> **Note:** `calculations` is also the history table — every saved calculation appears in `/api/history/me` and `/api/history/all`.
+
 ```mermaid
 erDiagram
     users {
@@ -186,19 +188,50 @@ erDiagram
         timestamp created_at
     }
 
-    calculations {
+    calculations["calculations (= history)"] {
         bigint id PK
         bigint user_id FK
+        timestamp created_at
         varchar project_name
         varchar house_shape
         double house_length
         double house_width
+        double l_cut_length
+        double l_cut_width
         varchar roof_type
-        int lift_count
-        int bays
+        double roof_pitch
+        int gable_ends
+        varchar tube_size
+        varchar ledger_scenario
         double perimeter
-        text material_results
-        timestamp created_at
+        int bays
+        double total_height
+        int standards
+        int ledgers
+        int handrails
+        int transoms
+        int boards
+        int base_plates
+        int sole_boards
+        int right_angle_couplers
+        int swivel_couplers
+        int sleeve_couplers
+        int putlog_couplers
+        int sway_bracing
+        int ledger_bracing
+        int toeboards
+        int gable_standards
+        int gable_couplers
+        int return_count
+        int return_platform_boards
+        int return_platform_transoms
+        int return_platform_ledgers
+        text board_summary
+        text ledger_tube_summary
+        text handrail_tube_summary
+        text standard_tube_summary
+        text face_ledger_tube_breakdown
+        text face_board_breakdown
     }
 
     calculation_lifts {
@@ -209,6 +242,6 @@ erDiagram
         boolean has_boards
     }
 
-    users ||--o{ calculations : "has"
+    users ||--o{ calculations : "saves"
     calculations ||--o{ calculation_lifts : "has"
 ```
