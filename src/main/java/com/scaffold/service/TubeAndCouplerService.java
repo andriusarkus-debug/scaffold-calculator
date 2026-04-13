@@ -501,12 +501,20 @@ import java.util.stream.Collectors;
         int fleets = (int) Math.floor(faceLength / primaryLength);
         double remainder = faceLength - fleets * primaryLength;
         StringBuilder sb = new StringBuilder();
-        sb.append(fleets).append(fleets == 1 ? " fleet " : " fleets ").append(primaryName);
         if (remainder > 0.1) {
             BoardSize secondary = findSmallestBoardCovering(remainder);
-            if (secondary != null) {
-                sb.append(" + 1 fleet ").append(formatTubeSize(secondary.getLengthM()));
+            if (secondary != null && Math.abs(secondary.getLengthM() - primaryLength) < 0.001) {
+                // Cover fleet is the same size — merge into one count
+                fleets++;
+                sb.append(fleets).append(fleets == 1 ? " fleet " : " fleets ").append(primaryName);
+            } else {
+                sb.append(fleets).append(fleets == 1 ? " fleet " : " fleets ").append(primaryName);
+                if (secondary != null) {
+                    sb.append(" + 1 fleet ").append(formatTubeSize(secondary.getLengthM()));
+                }
             }
+        } else {
+            sb.append(fleets).append(fleets == 1 ? " fleet " : " fleets ").append(primaryName);
         }
         sb.append("  (").append(String.format("%.2f", faceLength)).append("m)");
         return sb.toString();
