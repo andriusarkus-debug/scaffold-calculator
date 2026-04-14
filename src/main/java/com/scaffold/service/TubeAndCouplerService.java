@@ -364,7 +364,7 @@ import java.util.stream.Collectors;
                 .handrailTubeSummary(handrailTubeSummary)
                 .ledgerBraceTubeSummary(ledgerBraceTubeSummary)
                 .swayBraceTubeCount(swayBracing)
-                .swayBraceTubeSize("10ft")
+                .swayBraceTubeSize("8ft")
                 .standardTubeSummary(standardTubeSummary)
                 .ledgerScenario(input.getLedgerScenario() != null ? input.getLedgerScenario() : LedgerScenario.SCENARIO_ONE)
                 .transomsSavedByTopLedgers(transomsSavedByTopLedgers)
