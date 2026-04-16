@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 // Spring Security naudoja šią klasę vartotojui surasti prisijungimo metu.
 // formLogin() automatiškai iškviečia loadUserByUsername() su įvestu vardu.
+// User entitetas implementuoja UserDetails — grąžiname jį tiesiai, be papildomo konvertavimo.
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -18,14 +19,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+        return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Vartotojas nerastas: " + username));
-
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPasswordHash())
-                .authorities(user.getRole().name())   // pvz. "ROLE_ADMIN"
-                .disabled(!user.isActive())            // išjungta paskyra negali prisijungti
-                .build();
     }
 }

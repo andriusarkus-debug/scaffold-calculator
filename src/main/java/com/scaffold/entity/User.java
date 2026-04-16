@@ -5,10 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-
-
+import java.util.Collection;
+import java.util.List;
 
 // @Builder (Lombok) leidžia kurti objektus taip: User.builder().username("jonas").build()
 @Entity
@@ -17,7 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,4 +51,25 @@ public class User {
     protected void onCreate() { // Metodas, nustatantis sukūrimo laiką
         this.createdAt = LocalDateTime.now(); // Nustatome dabartinį laiką kaip sukūrimo laiką
     }
+
+    // UserDetails metodai — Spring Security naudoja prisijungimo ir autorizacijos metu
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getPassword() { return passwordHash; }
+
+    @Override
+    public boolean isEnabled() { return active; }
+
+    @Override
+    public boolean isAccountNonExpired() { return true; }
+
+    @Override
+    public boolean isAccountNonLocked() { return true; }
+
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
 }

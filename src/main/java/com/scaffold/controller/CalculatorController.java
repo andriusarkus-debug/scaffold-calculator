@@ -4,10 +4,11 @@ import com.scaffold.model.LiftInput;
 import com.scaffold.model.MaterialResult;
 import com.scaffold.model.ScaffoldInput;
 import com.scaffold.model.enums.*;
+import com.scaffold.entity.User;
 import com.scaffold.service.CalculationService;
 import com.scaffold.service.TubeAndCouplerService;
-import com.scaffold.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,6 @@ public class CalculatorController {
 
     private final TubeAndCouplerService tubeAndCouplerService;
     private final CalculationService calculationService;
-    private final UserService userService;
 
     // Rodo tuščią skaičiuoklės formą
     @GetMapping("/calculator")
@@ -59,8 +59,9 @@ public class CalculatorController {
             // 3+ liftai → 21ft. Vartotojas nesirenka — auto.
             input.setTubeSize(TubeSize.TWENTY_ONE_FOOT);
 
+            User currentUser = (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
             MaterialResult result = tubeAndCouplerService.calculate(input);
-            calculationService.save(input, result, userService.getByUsername(principal.getName()));
+            calculationService.save(input, result, currentUser);
             model.addAttribute("result", result);
             model.addAttribute("input", input);
             return "result";
