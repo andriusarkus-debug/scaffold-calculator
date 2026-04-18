@@ -246,7 +246,7 @@
           </div>
 
           <!-- Loading Bay + Ladder Tower -->
-          <div th:with="lb=${loadingBays[calc.id]}, lt=${ladderTowers[calc.id]}"
+          <div th:with="lb=${@accessTowerService.calculateLoadingBay(calc.lifts.size())}, lt=${@accessTowerService.calculateLadderTower(calc.lifts.size())}"
                class="mt-3 row g-3">
 
             <!-- Loading Bay -->
