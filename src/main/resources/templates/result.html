@@ -416,6 +416,71 @@
     </div>
 
   </div><!-- /row -->
+
+  <!-- Loading Bay + Ladder Tower -->
+  <div class="row g-4 mt-1">
+
+    <!-- Loading Bay -->
+    <div class="col-12 col-lg-6">
+      <div class="result-card card h-100">
+        <div class="card-header">
+          <i class="bi bi-box-arrow-in-down" style="color:#7c3aed;"></i>
+          Loading Bay
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Material</th><th class="text-end">Qty</th></tr></thead>
+            <tbody>
+              <tr th:if="${result.loadingBay.boards13ft > 0}"><td>13ft boards</td><td class="text-end fw-bold" th:text="${result.loadingBay.boards13ft}"></td></tr>
+              <tr th:if="${result.loadingBay.boards5ft > 0}"><td>5ft boards</td><td class="text-end fw-bold" th:text="${result.loadingBay.boards5ft}"></td></tr>
+              <tr th:if="${result.loadingBay.tubes21ft > 0}"><td>21ft tubes</td><td class="text-end fw-bold" th:text="${result.loadingBay.tubes21ft}"></td></tr>
+              <tr th:if="${result.loadingBay.tubes13ft > 0}"><td>13ft tubes</td><td class="text-end fw-bold" th:text="${result.loadingBay.tubes13ft}"></td></tr>
+              <tr th:if="${result.loadingBay.tubes10ft > 0}"><td>10ft tubes</td><td class="text-end fw-bold" th:text="${result.loadingBay.tubes10ft}"></td></tr>
+              <tr th:if="${result.loadingBay.tubes8ft > 0}"><td>8ft tubes</td><td class="text-end fw-bold" th:text="${result.loadingBay.tubes8ft}"></td></tr>
+              <tr th:if="${result.loadingBay.tubes6ft > 0}"><td>6ft tubes</td><td class="text-end fw-bold" th:text="${result.loadingBay.tubes6ft}"></td></tr>
+              <tr th:if="${result.loadingBay.tubes5ft > 0}"><td>5ft tubes</td><td class="text-end fw-bold" th:text="${result.loadingBay.tubes5ft}"></td></tr>
+              <tr th:if="${result.loadingBay.soleBoards > 0}"><td>Soleboards</td><td class="text-end fw-bold" th:text="${result.loadingBay.soleBoards}"></td></tr>
+              <tr th:if="${result.loadingBay.loadingBayGates > 0}"><td>Loading bay gates</td><td class="text-end fw-bold" th:text="${result.loadingBay.loadingBayGates}"></td></tr>
+              <tr><td>Right-angle couplers</td><td class="text-end fw-bold" th:text="${result.loadingBay.rightAngleCouplers}"></td></tr>
+              <tr><td>Putlog couplers</td><td class="text-end fw-bold" th:text="${result.loadingBay.putlogCouplers}"></td></tr>
+              <tr><td>Swivel couplers</td><td class="text-end fw-bold" th:text="${result.loadingBay.swivelCouplers}"></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ladder Tower -->
+    <div class="col-12 col-lg-6">
+      <div class="result-card card h-100">
+        <div class="card-header">
+          <i class="bi bi-ladder" style="color:#7c3aed;"></i>
+          Ladder Tower
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Material</th><th class="text-end">Qty</th></tr></thead>
+            <tbody>
+              <tr><td>13ft boards</td><td class="text-end fw-bold" th:text="${result.ladderTower.boards13ft}"></td></tr>
+              <tr><td>5ft boards</td><td class="text-end fw-bold" th:text="${result.ladderTower.boards5ft}"></td></tr>
+              <tr><td>8ft board</td><td class="text-end fw-bold" th:text="${result.ladderTower.boards8ft}"></td></tr>
+              <tr><td>13ft tubes</td><td class="text-end fw-bold" th:text="${result.ladderTower.tubes13ft}"></td></tr>
+              <tr><td>10ft tube</td><td class="text-end fw-bold" th:text="${result.ladderTower.tubes10ft}"></td></tr>
+              <tr><td>8ft tubes</td><td class="text-end fw-bold" th:text="${result.ladderTower.tubes8ft}"></td></tr>
+              <tr><td>5ft tubes</td><td class="text-end fw-bold" th:text="${result.ladderTower.tubes5ft}"></td></tr>
+              <tr><td>Right-angle couplers</td><td class="text-end fw-bold" th:text="${result.ladderTower.rightAngleCouplers}"></td></tr>
+              <tr><td>Putlog couplers</td><td class="text-end fw-bold" th:text="${result.ladderTower.putlogCouplers}"></td></tr>
+              <tr><td>Swivel couplers</td><td class="text-end fw-bold" th:text="${result.ladderTower.swivelCouplers}"></td></tr>
+              <tr><td>4m ladders</td><td class="text-end fw-bold" th:text="${result.ladderTower.ladders4m}"></td></tr>
+              <tr><td>Ladder gates</td><td class="text-end fw-bold" th:text="${result.ladderTower.ladderGates}"></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /access towers row -->
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

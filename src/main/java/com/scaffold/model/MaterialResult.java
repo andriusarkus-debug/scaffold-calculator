@@ -81,4 +81,8 @@ public class MaterialResult {
     private int bays;
     private double totalHeight;
     private int tubesPerStandard;
+
+    // --- Access towers ---
+    private LoadingBayResult loadingBay;
+    private LadderTowerResult ladderTower;
 }

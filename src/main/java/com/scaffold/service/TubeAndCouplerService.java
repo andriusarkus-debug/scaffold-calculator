@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
     private static final int BOARDS_PER_ROW = ScaffoldConstants.BOARDS_PER_ROW;
 
     private final GableService gableService;
+    private final AccessTowerService accessTowerService;
 
     // Grąžina sienos ilgius (be returnų) kiekvienai namo pusei.
     // RECTANGULAR: 4 sienos [L, W, L, W]
@@ -370,6 +371,8 @@ import java.util.stream.Collectors;
                 .transomsSavedByTopLedgers(transomsSavedByTopLedgers)
                 .faceLedgerTubeBreakdown(faceLedgerTubeBreakdown)
                 .faceBoardBreakdown(faceBoardBreakdown)
+                .loadingBay(accessTowerService.calculateLoadingBay(input.getLifts().size()))
+                .ladderTower(accessTowerService.calculateLadderTower(input.getLifts().size()))
                 .build();
     }
 
