@@ -16,7 +16,9 @@
       --purple-glow: rgba(124,58,237,.18);
     }
     * { box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #f1f5f9; color: #1e293b; }
+    html, body { background: #f1f5f9 !important; color-scheme: light; }
+    body { font-family: 'Inter', sans-serif; color: #1e293b; }
+    #page-wrap { display: flex; flex-direction: column; min-height: 100vh; width: 100%; background: #f1f5f9; }
 
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(22px); }
@@ -96,6 +98,7 @@
   </style>
 </head>
 <body>
+<div id="page-wrap">
 
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
@@ -485,5 +488,6 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</div><!-- /page-wrap -->
 </body>
 </html>
