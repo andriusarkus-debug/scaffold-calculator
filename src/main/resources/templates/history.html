@@ -169,7 +169,7 @@
             </span>
             <span class="stat-pill">
               <i class="bi bi-layers-fill" style="color:#2563eb;"></i>
-              Lifts: <strong th:text="${calc.lifts.size()}"></strong>
+              Lifts: <strong th:text="${calc.lifts != null ? calc.lifts.size() : 0}"></strong>
             </span>
           </div>
 
@@ -246,8 +246,7 @@
           </div>
 
           <!-- Loading Bay + Ladder Tower -->
-          <div th:with="lb=${@accessTowerService.calculateLoadingBay(calc.lifts.size())}, lt=${@accessTowerService.calculateLadderTower(calc.lifts.size())}"
-               class="mt-3 row g-3">
+          <div class="mt-3 row g-3">
 
             <!-- Loading Bay -->
             <div class="col-12 col-md-6">
@@ -256,19 +255,19 @@
               </p>
               <table class="table table-sm mb-0">
                 <tbody>
-                  <tr th:if="${lb.boards13ft > 0}"><td class="small">13ft boards</td><td class="text-end fw-bold small" th:text="${lb.boards13ft}"></td></tr>
-                  <tr th:if="${lb.boards5ft > 0}"><td class="small">5ft boards</td><td class="text-end fw-bold small" th:text="${lb.boards5ft}"></td></tr>
-                  <tr th:if="${lb.tubes21ft > 0}"><td class="small">21ft tubes</td><td class="text-end fw-bold small" th:text="${lb.tubes21ft}"></td></tr>
-                  <tr th:if="${lb.tubes13ft > 0}"><td class="small">13ft tubes</td><td class="text-end fw-bold small" th:text="${lb.tubes13ft}"></td></tr>
-                  <tr th:if="${lb.tubes10ft > 0}"><td class="small">10ft tubes</td><td class="text-end fw-bold small" th:text="${lb.tubes10ft}"></td></tr>
-                  <tr th:if="${lb.tubes8ft > 0}"><td class="small">8ft tubes</td><td class="text-end fw-bold small" th:text="${lb.tubes8ft}"></td></tr>
-                  <tr th:if="${lb.tubes6ft > 0}"><td class="small">6ft tubes</td><td class="text-end fw-bold small" th:text="${lb.tubes6ft}"></td></tr>
-                  <tr th:if="${lb.tubes5ft > 0}"><td class="small">5ft tubes</td><td class="text-end fw-bold small" th:text="${lb.tubes5ft}"></td></tr>
-                  <tr th:if="${lb.soleBoards > 0}"><td class="small">Soleboards</td><td class="text-end fw-bold small" th:text="${lb.soleBoards}"></td></tr>
-                  <tr th:if="${lb.loadingBayGates > 0}"><td class="small">Loading bay gates</td><td class="text-end fw-bold small" th:text="${lb.loadingBayGates}"></td></tr>
-                  <tr><td class="small">Right-angle couplers</td><td class="text-end fw-bold small" th:text="${lb.rightAngleCouplers}"></td></tr>
-                  <tr><td class="small">Putlog couplers</td><td class="text-end fw-bold small" th:text="${lb.putlogCouplers}"></td></tr>
-                  <tr><td class="small">Swivel couplers</td><td class="text-end fw-bold small" th:text="${lb.swivelCouplers}"></td></tr>
+                  <tr th:if="${lbList[stat.index].boards13ft > 0}"><td class="small">13ft boards</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].boards13ft}"></td></tr>
+                  <tr th:if="${lbList[stat.index].boards5ft > 0}"><td class="small">5ft boards</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].boards5ft}"></td></tr>
+                  <tr th:if="${lbList[stat.index].tubes21ft > 0}"><td class="small">21ft tubes</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].tubes21ft}"></td></tr>
+                  <tr th:if="${lbList[stat.index].tubes13ft > 0}"><td class="small">13ft tubes</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].tubes13ft}"></td></tr>
+                  <tr th:if="${lbList[stat.index].tubes10ft > 0}"><td class="small">10ft tubes</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].tubes10ft}"></td></tr>
+                  <tr th:if="${lbList[stat.index].tubes8ft > 0}"><td class="small">8ft tubes</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].tubes8ft}"></td></tr>
+                  <tr th:if="${lbList[stat.index].tubes6ft > 0}"><td class="small">6ft tubes</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].tubes6ft}"></td></tr>
+                  <tr th:if="${lbList[stat.index].tubes5ft > 0}"><td class="small">5ft tubes</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].tubes5ft}"></td></tr>
+                  <tr th:if="${lbList[stat.index].soleBoards > 0}"><td class="small">Soleboards</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].soleBoards}"></td></tr>
+                  <tr th:if="${lbList[stat.index].loadingBayGates > 0}"><td class="small">Loading bay gates</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].loadingBayGates}"></td></tr>
+                  <tr><td class="small">Right-angle couplers</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].rightAngleCouplers}"></td></tr>
+                  <tr><td class="small">Putlog couplers</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].putlogCouplers}"></td></tr>
+                  <tr><td class="small">Swivel couplers</td><td class="text-end fw-bold small" th:text="${lbList[stat.index].swivelCouplers}"></td></tr>
                 </tbody>
               </table>
             </div>
@@ -280,18 +279,18 @@
               </p>
               <table class="table table-sm mb-0">
                 <tbody>
-                  <tr><td class="small">13ft boards</td><td class="text-end fw-bold small" th:text="${lt.boards13ft}"></td></tr>
-                  <tr><td class="small">5ft boards</td><td class="text-end fw-bold small" th:text="${lt.boards5ft}"></td></tr>
-                  <tr><td class="small">8ft board</td><td class="text-end fw-bold small" th:text="${lt.boards8ft}"></td></tr>
-                  <tr><td class="small">13ft tubes</td><td class="text-end fw-bold small" th:text="${lt.tubes13ft}"></td></tr>
-                  <tr><td class="small">10ft tube</td><td class="text-end fw-bold small" th:text="${lt.tubes10ft}"></td></tr>
-                  <tr><td class="small">8ft tubes</td><td class="text-end fw-bold small" th:text="${lt.tubes8ft}"></td></tr>
-                  <tr><td class="small">5ft tubes</td><td class="text-end fw-bold small" th:text="${lt.tubes5ft}"></td></tr>
-                  <tr><td class="small">Right-angle couplers</td><td class="text-end fw-bold small" th:text="${lt.rightAngleCouplers}"></td></tr>
-                  <tr><td class="small">Putlog couplers</td><td class="text-end fw-bold small" th:text="${lt.putlogCouplers}"></td></tr>
-                  <tr><td class="small">Swivel couplers</td><td class="text-end fw-bold small" th:text="${lt.swivelCouplers}"></td></tr>
-                  <tr><td class="small">4m ladders</td><td class="text-end fw-bold small" th:text="${lt.ladders4m}"></td></tr>
-                  <tr><td class="small">Ladder gates</td><td class="text-end fw-bold small" th:text="${lt.ladderGates}"></td></tr>
+                  <tr><td class="small">13ft boards</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].boards13ft}"></td></tr>
+                  <tr><td class="small">5ft boards</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].boards5ft}"></td></tr>
+                  <tr><td class="small">8ft board</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].boards8ft}"></td></tr>
+                  <tr><td class="small">13ft tubes</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].tubes13ft}"></td></tr>
+                  <tr><td class="small">10ft tube</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].tubes10ft}"></td></tr>
+                  <tr><td class="small">8ft tubes</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].tubes8ft}"></td></tr>
+                  <tr><td class="small">5ft tubes</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].tubes5ft}"></td></tr>
+                  <tr><td class="small">Right-angle couplers</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].rightAngleCouplers}"></td></tr>
+                  <tr><td class="small">Putlog couplers</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].putlogCouplers}"></td></tr>
+                  <tr><td class="small">Swivel couplers</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].swivelCouplers}"></td></tr>
+                  <tr><td class="small">4m ladders</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].ladders4m}"></td></tr>
+                  <tr><td class="small">Ladder gates</td><td class="text-end fw-bold small" th:text="${ltList[stat.index].ladderGates}"></td></tr>
                 </tbody>
               </table>
             </div>

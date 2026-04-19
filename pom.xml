@@ -29,6 +29,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+
         <!-- Security: protects endpoints, handles auth -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

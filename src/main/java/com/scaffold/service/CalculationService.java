@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Service
@@ -108,11 +109,16 @@ public class CalculationService {
 
     // Grąžina prisijungusio vartotojo skaičiavimų istoriją
     public List<Calculation> findByUser(Long userId) {
-        return calculationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        return deduplicate(calculationRepository.findByUserIdOrderByCreatedAtDesc(userId));
     }
 
     // Grąžina visų vartotojų skaičiavimų istoriją (ROLE_MANAGER+)
     public List<Calculation> findAll() {
-        return calculationRepository.findAllByOrderByCreatedAtDesc();
+        return deduplicate(calculationRepository.findAllByOrderByCreatedAtDesc());
+    }
+
+    // JOIN FETCH gali grąžinti duplikatus kai yra keli liftai — šalina juos, išlaikant tvarką
+    private List<Calculation> deduplicate(List<Calculation> list) {
+        return new ArrayList<>(new LinkedHashSet<>(list));
     }
 }
