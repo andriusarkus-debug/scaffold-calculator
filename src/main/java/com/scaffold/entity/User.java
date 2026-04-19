@@ -3,8 +3,10 @@ package com.scaffold.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,11 +14,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 // @Builder (Lombok) leidžia kurti objektus taip: User.builder().username("jonas").build()
+// Nenaudojame @Data — @Data generuoja equals/hashCode iš visų laukų (įskaitant passwordHash),
+// o entitetams saugiau id-pagrindu. Taip pat @ToString be passwordHash.
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
+@ToString(exclude = "passwordHash")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -72,4 +79,17 @@ public class User implements UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() { return true; }
+
+    // equals/hashCode pagal `id` — saugu JPA entitetams.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User that)) return false;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

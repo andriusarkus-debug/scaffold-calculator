@@ -10,16 +10,24 @@ import com.scaffold.model.enums.TubeSize;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+// Vietoj @Data naudojame @Getter/@Setter — @Data generuoja equals/hashCode iš visų laukų
+// (įskaitant `lifts` kolekciją), kas gali sukelti LazyInitializationException ir klaidingai
+// veikti LinkedHashSet deduplicate(). equals/hashCode rašome rankiniu būdu, remdamiesi `id`.
 @Entity
 @Table(name = "calculations")
-@Data
+@Getter
+@Setter
+@ToString(exclude = "lifts") // neįtraukiame lazy kolekcijos į toString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -149,4 +157,18 @@ public class Calculation {
     @Convert(converter = MapStringToJsonConverter.class)
     @Column(columnDefinition = "TEXT")
     private Map<String, String> faceBoardBreakdown;
+
+    // equals/hashCode pagal `id` — saugu JPA entitetams su lazy kolekcijomis.
+    // Kol id == null (dar neišsaugota), du skirtingi objektai lygūs tik jei tai tas pats instance.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Calculation that)) return false;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

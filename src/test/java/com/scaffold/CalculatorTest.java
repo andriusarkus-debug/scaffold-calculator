@@ -6,61 +6,45 @@ import com.scaffold.model.enums.HouseShape;
 import com.scaffold.model.enums.LedgerScenario;
 import com.scaffold.model.enums.RoofType;
 import com.scaffold.model.enums.TubeSize;
+import com.scaffold.service.AccessTowerService;
 import com.scaffold.service.GableService;
 import com.scaffold.service.TubeAndCouplerService;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Sanity (smoke) testai — patikrina, kad skaičiavimas nesugriūna ir grąžina
+ * logiškus rezultatus pagrindiniams scenarijams (2 liftai, 4 liftai, L-shape).
+ * Tikslesnius skaičių lūkesčius laiko {@link com.scaffold.TubeAndCouplerServiceTest}.
+ * Čia tikriname tik invariantus (perimetrą, ne-neigiamus kiekius, bays > 0 ir pan.).
+ */
 public class CalculatorTest {
 
-    private final TubeAndCouplerService service = new TubeAndCouplerService(new GableService());
+    private final TubeAndCouplerService service =
+            new TubeAndCouplerService(new GableService(), new AccessTowerService());
 
-    // ================================================================
-    //  HELPER — spausdina rezultatus (naudojamas abiejuose testuose)
-    // ================================================================
-    private void printResult(MaterialResult r) {
-        System.out.println("Perimetras:        " + r.getPerimeter() + " m");
-        System.out.println("Bays:              " + r.getBays());
-        System.out.println("Bendras aukštis:   " + r.getTotalHeight() + " m");
-        System.out.println();
-        System.out.println("--- STANDARTAI ---");
-        System.out.println("Standartai:        " + r.getStandards() + " vnt (" + r.getStandardTubeSize() + ")");
-        System.out.println("Base plates:       " + r.getBasePlates());
-        System.out.println("Sole boards:       " + r.getSoleBoards());
-        System.out.println();
-        System.out.println("--- LEDGERS AND HANDRAILS ---");
-        System.out.println("Ledger vamzdžiai:  " + r.getLedgerTubeSummary());
-        System.out.println("Handrail vamzdžiai:" + r.getHandrailTubeSummary());
-        System.out.println();
-        System.out.println("--- LEDGER SCENARIJUS ---");
-        System.out.println("Scenarijus:        " + r.getLedgerScenario());
-        System.out.println("Sutaupyti transomiai (kampų viršutiniai ledgeriai): " + r.getTransomsSavedByTopLedgers() + " vnt");
-        System.out.println();
-        System.out.println("--- TRANSOMS ---");
-        System.out.println("Transomiai:        " + r.getTransoms() + " vnt (5ft)");
-        System.out.println();
-        System.out.println("--- BOARDS ---");
-        System.out.println("Bortai iš viso:    " + r.getBoards() + " vnt");
-        System.out.println("Bortų suvestinė:   " + r.getBoardSummary());
-        System.out.println();
-        System.out.println("--- FITTINGS ---");
-        System.out.println("Right-angle:       " + r.getRightAngleCouplers());
-        System.out.println("Swivel:            " + r.getSwivelCouplers());
-        System.out.println("Sleeve:            " + r.getSleeveCouplers());
-        System.out.println("Putlog:            " + r.getPutlogCouplers());
-        System.out.println();
-        System.out.println("--- BRACING ---");
-        System.out.println("Sway bracing:      " + r.getSwayBracing() + " vnt × " + r.getSwayBraceTubeSize());
-        System.out.println("Ledger bracing:    " + r.getLedgerBracing());
-        System.out.println("Ledger brace tubes:" + r.getLedgerBraceTubeSummary());
-        System.out.println();
-        System.out.println("--- KITA ---");
-        System.out.println("Toeboards:         " + r.getToeboards());
-        System.out.println("Advance guard rail:" + r.getAdvanceGuardRailSets() + " rinkiniai");
-        System.out.println("Return platformos: " + r.getReturnCount() + " kampai");
-        System.out.println("Return bortai:     " + r.getReturnPlatformBoards());
-        System.out.println("===================================");
+    // Tolerancija double palyginimams (1 mm)
+    private static final double EPS = 0.001;
+
+    /** Bendri invariantai, kurie turi galioti KIEKVIENAM skaičiavimui. */
+    private void assertResultIsSane(MaterialResult r) {
+        assertNotNull(r, "Rezultatas negali būti null");
+        assertTrue(r.getPerimeter() > 0, "Perimetras > 0");
+        assertTrue(r.getBays() > 0, "Bays > 0");
+        assertTrue(r.getTotalHeight() > 0, "Bendras aukštis > 0");
+        assertTrue(r.getStandards() > 0, "Standartai > 0");
+        assertTrue(r.getBasePlates() > 0, "Base plates > 0");
+        assertTrue(r.getSoleBoards() > 0, "Sole boards > 0");
+        assertTrue(r.getTransoms() >= 0, "Transomiai ne-neigiami");
+        assertTrue(r.getBoards() >= 0, "Bortai ne-neigiami");
+        assertTrue(r.getTubesPerStandard() > 0, "Tubes per standard > 0");
+        assertNotNull(r.getLedgerTubeSummary(), "Ledger suvestinė neturi būti null");
+        assertNotNull(r.getHandrailTubeSummary(), "Handrail suvestinė neturi būti null");
     }
 
     @Test
@@ -84,8 +68,17 @@ public class CalculatorTest {
 
         input.setLifts(List.of(lift1, lift2));
 
-        System.out.println("======= TWO LIFTS TEST (10m × 7m) =======");
-        printResult(service.calculate(input));
+        MaterialResult r = service.calculate(input);
+
+        assertResultIsSane(r);
+        // RECTANGULAR 12×12 → perimetras = 2*(12+12) = 48 m
+        assertEquals(48.0, r.getPerimeter(), EPS, "Stačiakampio perimetras");
+        // HIP stogas → nėra gable standartų
+        assertEquals(0, r.getGableStandards(), "HIP stogui neturi būti gable standartų");
+        // RECTANGULAR → 4 grįžimai (po vieną kiekviename kampe)
+        assertEquals(4, r.getReturnCount(), "Stačiakampis turi 4 return kampus");
+        // 2 liftai su bortais viename → bortai > 0
+        assertTrue(r.getBoards() > 0, "Liftas su bortais → bortai > 0");
     }
 
     @Test
@@ -96,8 +89,8 @@ public class CalculatorTest {
         input.setHouseShape(HouseShape.L_SHAPE);
         input.setHouseLength(10.0);
         input.setHouseWidth(8.0);
-        input.setLCutLength(4.0);   // horizontali išpjova
-        input.setLCutWidth(3.0);    // vertikali išpjova
+        input.setLCutLength(4.0);
+        input.setLCutWidth(3.0);
         input.setRoofType(RoofType.HIP);
         input.setTubeSize(TubeSize.TWENTY_ONE_FOOT);
         input.setLedgerScenario(LedgerScenario.SCENARIO_ONE);
@@ -113,8 +106,17 @@ public class CalculatorTest {
 
         input.setLifts(List.of(lift1, lift2));
 
-        System.out.println("======= L-SHAPE TEST (10m × 8m, cut 4m × 3m) =======");
-        printResult(service.calculate(input));
+        MaterialResult r = service.calculate(input);
+
+        assertResultIsSane(r);
+        // L-shape perimetras = 2*(L+W) = 2*(10+8) = 36 m (per projekto taisyklę)
+        assertEquals(36.0, r.getPerimeter(), EPS, "L-shape perimetras lygus ribojančiam stačiakampiui");
+        // L-shape turi 5 return kampus (D kampas — vidinis, praleistas)
+        assertEquals(5, r.getReturnCount(), "L-shape: 5 return kampai (D praleistas)");
+        assertNotNull(r.getLedgerScenario(), "Ledger scenario turi būti užpildytas");
+        // Scenarijus → sutaupytų transomų > 0 (bent 1 kampas su TOP ledger)
+        assertTrue(r.getTransomsSavedByTopLedgers() > 0,
+                "Bent vienas TOP ledger kampas sutaupo transomus");
     }
 
     @Test
@@ -146,7 +148,15 @@ public class CalculatorTest {
 
         input.setLifts(List.of(lift1, lift2, lift3, lift4));
 
-        System.out.println("======= FOUR LIFTS TEST (10m × 7m) =======");
-        printResult(service.calculate(input));
+        MaterialResult r = service.calculate(input);
+
+        assertResultIsSane(r);
+        // RECTANGULAR 10×7 → perimetras = 2*(10+7) = 34 m
+        assertEquals(34.0, r.getPerimeter(), EPS, "Stačiakampio perimetras");
+        // 4 liftai → bendras aukštis = 1.5+1.0+1.5+1.0 = 5.0 m
+        assertEquals(5.0, r.getTotalHeight(), EPS, "Bendras liftų aukštis");
+        // 3+ liftai → visi standartai 21ft (pagal projekto taisyklę)
+        assertEquals("21ft", r.getStandardTubeSize(),
+                "3+ liftai → visi standartai 21ft");
     }
 }

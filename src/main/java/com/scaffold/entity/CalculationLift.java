@@ -5,12 +5,20 @@ import com.scaffold.model.enums.BoardSize;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
+import java.util.Objects;
+
+// Nenaudojame @Data — equals/hashCode pagal `id`, kad išvengtume circular reference
+// su Calculation (Calculation.lifts → Lift.calculation → Calculation...).
 @Entity
 @Table(name = "calculation_lifts")
-@Data
+@Getter
+@Setter
+@ToString(exclude = "calculation") // neįtraukiame tėvo, kad nebūtų begalinės kilpos
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -31,4 +39,17 @@ public class CalculationLift {
 
     @Enumerated(EnumType.STRING)
     private BoardSize boardSize;
+
+    // equals/hashCode pagal `id` — saugu JPA entitetams.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CalculationLift that)) return false;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

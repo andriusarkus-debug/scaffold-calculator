@@ -3,10 +3,14 @@ package com.scaffold.service;
 import com.scaffold.dto.RegisterRequest;
 import com.scaffold.entity.Role;
 import com.scaffold.entity.User;
+import com.scaffold.exception.EmailTakenException;
+import com.scaffold.exception.UserNotFoundException;
+import com.scaffold.exception.UsernameTakenException;
 import com.scaffold.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 // JWT importai — palikti ateities REST API / mobile app naudojimui
 // import com.scaffold.dto.AuthResponse;
@@ -16,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true) // Skaitymo metodai bus read-only pagal nutylėjimą
 public class UserService {
 
     private final UserRepository userRepository;
@@ -26,12 +31,13 @@ public class UserService {
 
     // Registruoja naują vartotoją duomenų bazėje.
     // Prisijungimą tvarko Spring Security automatiškai per formLogin().
+    @Transactional // Rašymo metodas — perrašo klasės lygio read-only
     public void register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Toks vartotojo vardas jau užimtas");
+            throw new UsernameTakenException(request.getUsername());
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Šis el. paštas jau naudojamas");
+            throw new EmailTakenException(request.getEmail());
         }
 
         User user = User.builder()
@@ -51,7 +57,7 @@ public class UserService {
 
     public User getByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Vartotojas nerastas: " + username));
+                .orElseThrow(() -> new UserNotFoundException(username));
     }
 
     // JWT prisijungimas — paliktas ateities REST API / mobile app naudojimui
@@ -61,7 +67,7 @@ public class UserService {
                 .orElseThrow(() -> new BadCredentialsException("Neteisingas vardas arba slaptažodis"));
 
         if (!user.isActive()) {
-            throw new RuntimeException("Paskyra išjungta. Susisiekite su administratoriumi.");
+            throw new AccountDisabledException();
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {

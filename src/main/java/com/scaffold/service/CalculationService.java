@@ -9,6 +9,7 @@ import com.scaffold.model.ScaffoldInput;
 import com.scaffold.repository.CalculationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -16,11 +17,13 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true) // Visi skaitymo metodai bus read-only pagal nutylėjimą
 public class CalculationService {
 
     private final CalculationRepository calculationRepository;
 
     // Išsaugo skaičiavimo įvesties duomenis ir rezultatą duomenų bazėje
+    @Transactional // Rašymo metodas — perrašo klasės lygio read-only
     public Calculation save(ScaffoldInput input, MaterialResult result, User user) {
 
         Calculation calculation = Calculation.builder()

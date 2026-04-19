@@ -8,6 +8,7 @@ import com.scaffold.model.enums.HouseShape;
 import com.scaffold.model.enums.LedgerScenario;
 import com.scaffold.model.enums.RoofType;
 import com.scaffold.model.enums.TubeSize;
+import com.scaffold.service.AccessTowerService;
 import com.scaffold.service.GableService;
 import com.scaffold.service.TubeAndCouplerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,7 @@ class TubeAndCouplerServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new TubeAndCouplerService(new GableService());
+        service = new TubeAndCouplerService(new GableService(), new AccessTowerService());
     }
 
     // =========================================================
