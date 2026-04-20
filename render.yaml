@@ -25,10 +25,23 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: SPRING_DATASOURCE_URL
+
+      # --- Database: atskiri env kintamieji vietoj connectionString ---
+      # Render'o `connectionString` turi formatą `postgresql://...` (libpq),
+      # o Java JDBC reikalauja `jdbc:postgresql://...`. Todėl imam atskirus
+      # laukus ir patys suklijuojam URL application-prod.properties faile.
+      - key: DB_HOST
         fromDatabase:
           name: scaffold-db
-          property: connectionString
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: scaffold-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: scaffold-db
+          property: database
       - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
           name: scaffold-db
@@ -37,5 +50,6 @@ services:
         fromDatabase:
           name: scaffold-db
           property: password
+
       - key: JWT_SECRET
         generateValue: true       # Render auto-sugeneruoja saugų slaptažodį
