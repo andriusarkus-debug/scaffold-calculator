@@ -26,13 +26,13 @@ public class AuthController {
         if (error != null) {
             // "disabled" — paskyra egzistuoja, bet administratorius dar nepatvirtino
             if ("disabled".equals(error)) {
-                model.addAttribute("error", "Jūsų paskyra laukia administratoriaus patvirtinimo.");
+                model.addAttribute("error", "Your account is awaiting administrator approval.");
             } else {
-                model.addAttribute("error", "Neteisingas vartotojo vardas arba slaptažodis.");
+                model.addAttribute("error", "Invalid username or password.");
             }
         }
-        if (logout != null)     model.addAttribute("message", "Sėkmingai atsijungėte.");
-        if (registered != null) model.addAttribute("message", "Paskyra sukurta. Laukiama administratoriaus patvirtinimo — gausite prieigą po patvirtinimo.");
+        if (logout != null)     model.addAttribute("message", "Logged out successfully.");
+        if (registered != null) model.addAttribute("message", "Account created. Awaiting administrator approval — you will gain access once approved.");
         return "login";
     }
 
