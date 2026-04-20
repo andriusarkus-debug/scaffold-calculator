@@ -1,0 +1,41 @@
+# ============================================================
+# Render.com Blueprint
+# ------------------------------------------------------------
+# Render'e pasirinkus "New + → Blueprint" ir nukreipus į šį repo,
+# šis failas automatiškai sukuria:
+#   1. web service (Spring Boot app)
+#   2. PostgreSQL duomenų bazę
+#   3. susieja juos kintamaisiais
+# ============================================================
+
+databases:
+  - name: scaffold-db
+    databaseName: scaffold_db
+    user: scaffold_user
+    plan: free                    # Free Postgres (90 dienų, po to $7/mo)
+
+services:
+  - type: web
+    name: scaffold-calculator
+    runtime: docker               # Render turi Java env'ą; čia naudojam Docker kad garantuotumėm Java 17
+    plan: free                    # Free web service (užmiega po 15 min idle)
+    branch: master
+    autoDeploy: true              # Push'as į master → automatinis deploy
+    healthCheckPath: /login       # Render tikrina, ar app'as gyvas
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: scaffold-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: scaffold-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: scaffold-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true       # Render auto-sugeneruoja saugų slaptažodį
