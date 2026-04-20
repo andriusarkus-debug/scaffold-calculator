@@ -23,9 +23,16 @@ public class AuthController {
                             @RequestParam(required = false) String logout,
                             @RequestParam(required = false) String registered,
                             Model model) {
-        if (error != null)      model.addAttribute("error", "Neteisingas vartotojo vardas arba slaptažodis.");
+        if (error != null) {
+            // "disabled" — paskyra egzistuoja, bet administratorius dar nepatvirtino
+            if ("disabled".equals(error)) {
+                model.addAttribute("error", "Jūsų paskyra laukia administratoriaus patvirtinimo.");
+            } else {
+                model.addAttribute("error", "Neteisingas vartotojo vardas arba slaptažodis.");
+            }
+        }
         if (logout != null)     model.addAttribute("message", "Sėkmingai atsijungėte.");
-        if (registered != null) model.addAttribute("message", "Paskyra sukurta! Galite prisijungti.");
+        if (registered != null) model.addAttribute("message", "Paskyra sukurta. Laukiama administratoriaus patvirtinimo — gausite prieigą po patvirtinimo.");
         return "login";
     }
 

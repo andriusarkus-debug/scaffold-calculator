@@ -40,12 +40,14 @@ public class UserService {
             throw new EmailTakenException(request.getEmail());
         }
 
+        // Nauji vartotojai sukuriami kaip NEAKTYVŪS — negalės prisijungti,
+        // kol administratorius nepatvirtins jų per /admin/users puslapį.
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(Role.ROLE_USER)
-                .active(true)
+                .active(false)
                 .build();
 
         userRepository.save(user);

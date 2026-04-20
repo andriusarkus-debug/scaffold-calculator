@@ -6,9 +6,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 
 // JWT imports — palikti ateities REST API / mobile app naudojimui
 // import com.scaffold.security.JwtAuthFilter;
@@ -41,7 +44,7 @@ public class SecurityConfig {
                     .loginPage("/login")               // mūsų prisijungimo puslapis
                     .loginProcessingUrl("/login")      // forma siunčia POST į šį URL
                     .defaultSuccessUrl("/calculator", true)
-                    .failureUrl("/login?error")
+                    .failureHandler(authFailureHandler())
                     .permitAll()
             )
             // Atsijungimas
@@ -63,5 +66,19 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    // Custom failure handler — atskiria "paskyra išjungta/neaktyvi" nuo "blogi duomenys".
+    // DisabledException keliamas, kai user.isEnabled() == false (active=false).
+    // Tada redirectinam į /login?error=disabled, kad vartotojas matytų aiškų pranešimą.
+    @Bean
+    public AuthenticationFailureHandler authFailureHandler() {
+        return (request, response, exception) -> {
+            String target = (exception instanceof DisabledException)
+                    ? "/login?error=disabled"
+                    : "/login?error";
+            new SimpleUrlAuthenticationFailureHandler(target)
+                    .onAuthenticationFailure(request, response, exception);
+        };
     }
 }
