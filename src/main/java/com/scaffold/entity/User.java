@@ -18,7 +18,7 @@ import java.util.Objects;
 
 // @Builder (Lombok) leidžia kurti objektus taip: User.builder().username("jonas").build()
 // Nenaudojame @Data — @Data generuoja equals/hashCode iš visų laukų (įskaitant passwordHash),
-// o entitetams saugiau id-pagrindu. Taip pat @ToString be passwordHash.
+// o entitetams saugiau id-pagrindu. Taip pat @ToString be passwordHash .
 @Entity
 @Table(name = "users")
 @Getter
@@ -46,7 +46,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
-    @Builder.Default // Nurodo numatytąją reikšmę Builder šablonui
+    @Builder.Default //  Lombok'as po @Builder ignoruotų inicializavimą (= true). @Builder.Default priverčia naudoti šį default'ą.
     @Column(nullable = false)
     private boolean active = true; // Vartotojo paskyros aktyvumo požymis — administratorius gali išjungti
 
@@ -55,7 +55,7 @@ public class User implements UserDetails {
 
     // Automatiškai nustato sukūrimo laiką prieš pirmąjį išsaugojimą duomenų bazėje
     @PrePersist // Anotacija — metodas vykdomas prieš išsaugant objektą
-    protected void onCreate() { // Metodas, nustatantis sukūrimo laiką
+    protected void onCreate() { // Metodas, nustatantis sukūrimo laiką, protected- Tai framework hook — niekas iš išorės neturėtų jo kviesti. protected signalizuoja konvenciją. Hibernate per refleksiją vis tiek pasieks.
         this.createdAt = LocalDateTime.now(); // Nustatome dabartinį laiką kaip sukūrimo laiką
     }
 
