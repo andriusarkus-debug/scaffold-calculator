@@ -187,16 +187,32 @@
                 <td>Ledgers</td><td class="text-end fw-bold" th:text="${calc.ledgerTubeSummary != null ? #aggregates.sum(calc.ledgerTubeSummary.values()) : calc.ledgers}"></td>
               </tr>
               <tr>
+                <td>Handrails</td><td class="text-end fw-bold" th:text="${calc.handrailTubeSummary != null ? #aggregates.sum(calc.handrailTubeSummary.values()) : calc.handrails}"></td>
                 <td>Transoms</td><td class="text-end fw-bold" th:text="${calc.transoms}"></td>
+              </tr>
+              <tr>
                 <td>Boards</td><td class="text-end fw-bold" th:text="${calc.boards}"></td>
+                <td>Base plates</td><td class="text-end fw-bold" th:text="${calc.basePlates}"></td>
               </tr>
               <tr>
-                <td>Right-angle couplers</td><td class="text-end fw-bold" th:text="${calc.rightAngleCouplers}"></td>
-                <td>Swivel couplers</td><td class="text-end fw-bold" th:text="${calc.swivelCouplers}"></td>
+                <td>Sole boards</td><td class="text-end fw-bold" th:text="${calc.soleBoards}"></td>
+                <td>Toeboards</td><td class="text-end fw-bold" th:text="${calc.toeboards}"></td>
               </tr>
               <tr>
+                <td>Advance guard rail sets</td><td class="text-end fw-bold" th:text="${calc.advanceGuardRailSets}"></td>
                 <td>Sway bracing</td><td class="text-end fw-bold" th:text="${calc.swayBracing}"></td>
+              </tr>
+              <tr>
                 <td>Ledger bracing</td><td class="text-end fw-bold" th:text="${calc.ledgerBracing}"></td>
+                <td>Right-angle couplers</td><td class="text-end fw-bold" th:text="${calc.rightAngleCouplers}"></td>
+              </tr>
+              <tr>
+                <td>Swivel couplers</td><td class="text-end fw-bold" th:text="${calc.swivelCouplers}"></td>
+                <td>Sleeve couplers</td><td class="text-end fw-bold" th:text="${calc.sleeveCouplers}"></td>
+              </tr>
+              <tr>
+                <td>Putlog couplers</td><td class="text-end fw-bold" th:text="${calc.putlogCouplers}"></td>
+                <td></td><td></td>
               </tr>
             </tbody>
           </table>
