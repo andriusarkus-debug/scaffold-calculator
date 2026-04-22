@@ -300,6 +300,56 @@
       </div>
     </div>
 
+    <!-- ═══ WALL GROUPS — LEDGERS (brigadininkui) ═══ -->
+    <div class="col-12" th:if="${result.wallGroupLedgerBreakdown != null and !result.wallGroupLedgerBreakdown.isEmpty()}">
+      <div class="card result-card">
+        <div class="card-header">
+          <i class="bi bi-stack" style="color:#7c3aed;"></i>Ledger tubes per wall group (all levels)
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Wall group</th>
+                <th>Tubes needed (per level × levels = total)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="entry : ${result.wallGroupLedgerBreakdown}">
+                <td class="fw-semibold" th:text="${entry.key}"></td>
+                <td><strong th:text="${entry.value}"></strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ WALL GROUPS — BOARDS (brigadininkui) ═══ -->
+    <div class="col-12" th:if="${result.wallGroupBoardBreakdown != null and !result.wallGroupBoardBreakdown.isEmpty()}">
+      <div class="card result-card">
+        <div class="card-header">
+          <i class="bi bi-stack" style="color:#16a34a;"></i>Boards per wall group (1 platform)
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Wall group</th>
+                <th>Boards needed (per fleet × walls = total)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="entry : ${result.wallGroupBoardBreakdown}">
+                <td class="fw-semibold" th:text="${entry.key}"></td>
+                <td><strong th:text="${entry.value}"></strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ LEDGER TUBES PER WALL ═══ -->
     <div class="col-12" th:if="${result.faceLedgerTubeBreakdown != null}">
       <div class="card result-card">

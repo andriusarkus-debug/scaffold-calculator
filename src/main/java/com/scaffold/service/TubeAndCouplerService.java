@@ -186,6 +186,9 @@ import java.util.stream.Collectors;
 
         int boards = boardSummary.values().stream().mapToInt(Integer::intValue).sum();
 
+        // --- 5b. Wall-group board breakdown (vienodos sienos sugrupuotos, viena platforma) ---
+        Map<String, String> wallGroupBoardBreakdown = buildWallGroupBoardBreakdown(input, faceLengths, scaffoldRuns, boardedLift);
+
         // --- 6. Pagrindo elementai ---
         int basePlates = standardPositions;                                       // Po vieną kiekvienam stovui
         int soleBoards = standardPositions;
@@ -215,6 +218,10 @@ import java.util.stream.Collectors;
             String value = tubeCombo + "  [run: " + String.format("%.2f", run) + "m]";
             faceLedgerTubeBreakdown.put(key, value);
         }
+
+        // --- 7c. Wall-group ledger breakdown (vienodos sienos sugrupuotos, × lygiai) ---
+        // Brigadininkui: kiek vamzdžių iš viso reikia sienų grupei per visus lygius.
+        Map<String, String> wallGroupLedgerBreakdown = buildWallGroupLedgerBreakdown(scaffoldRuns, lifts);
 
         // --- 8. Ledgerių ir handrailų SKAIČIUS ---
         // Kiekvienai sienai: ceil(sienos ilgis / 1.8) × 2 (inside+outside) + returnCount kampai
@@ -371,6 +378,8 @@ import java.util.stream.Collectors;
                 .transomsSavedByTopLedgers(transomsSavedByTopLedgers)
                 .faceLedgerTubeBreakdown(faceLedgerTubeBreakdown)
                 .faceBoardBreakdown(faceBoardBreakdown)
+                .wallGroupLedgerBreakdown(wallGroupLedgerBreakdown)
+                .wallGroupBoardBreakdown(wallGroupBoardBreakdown)
                 .loadingBay(accessTowerService.calculateLoadingBay(input.getLifts().size()))
                 .ladderTower(accessTowerService.calculateLadderTower(input.getLifts().size()))
                 .build();
@@ -520,6 +529,118 @@ import java.util.stream.Collectors;
         }
         sb.append("  (").append(String.format("%.2f", faceLength)).append("m)");
         return sb.toString();
+    }
+
+    // Grupuoja sienas pagal vienodą scaffold run ilgį (1cm tolerancija) ir
+    // pateikia vamzdžių kiekį su dauginimu per inside+outside × lygius.
+    // Pvz.: Wall 1 ir Wall 3 abi turi 18.05m run → grupė "Walls 1 & 3 (18.05m)"
+    // Vienoje sienoje runas = 1×21ft+1×16ft+1×13ft+1×10ft
+    // Per grupę per lygį: 2 sienos × 2 (inside+outside) = 4× kiekvieno dydžio
+    // Totalas: 4× × (lifts+1) lygių
+    private Map<String, String> buildWallGroupLedgerBreakdown(List<Double> scaffoldRuns, int lifts) {
+        Map<String, String> result = new LinkedHashMap<>();
+        int levels = lifts + 1;
+
+        // Sugrupuojam sienų indeksus pagal run ilgį (apvalinam iki cm kad išvengtume float klaidų)
+        Map<Long, List<Integer>> groups = new LinkedHashMap<>();
+        for (int i = 0; i < scaffoldRuns.size(); i++) {
+            long key = Math.round(scaffoldRuns.get(i) * 100);
+            groups.computeIfAbsent(key, k -> new ArrayList<>()).add(i);
+        }
+
+        for (Map.Entry<Long, List<Integer>> group : groups.entrySet()) {
+            List<Integer> wallIndices = group.getValue();
+            double run = scaffoldRuns.get(wallIndices.get(0));
+            Map<String, Integer> tubesPerRun = tubesForRun(run);
+
+            // Daugiklis per lygį: sienų skaičius × 2 (inside + outside)
+            int perLevelMultiplier = wallIndices.size() * 2;
+            int totalMultiplier = perLevelMultiplier * levels;
+
+            // Raktas — "Walls 1 & 3 (18.05m)" arba "Wall 2 (12.0m)"
+            StringBuilder wallLabel = new StringBuilder("Wall");
+            if (wallIndices.size() > 1) wallLabel.append("s");
+            wallLabel.append(" ");
+            for (int i = 0; i < wallIndices.size(); i++) {
+                if (i > 0) wallLabel.append(i == wallIndices.size() - 1 ? " & " : ", ");
+                wallLabel.append(wallIndices.get(i) + 1);
+            }
+            wallLabel.append(String.format(" (%.2fm)", run));
+
+            // Reikšmė — "4×21ft + 4×16ft + ...  × 3 levels = 12×21ft, 12×16ft, ..."
+            String perLevelStr = tubesPerRun.entrySet().stream()
+                    .map(e -> (perLevelMultiplier * e.getValue()) + "×" + e.getKey())
+                    .collect(Collectors.joining(" + "));
+            String totalStr = tubesPerRun.entrySet().stream()
+                    .map(e -> (totalMultiplier * e.getValue()) + "×" + e.getKey())
+                    .collect(Collectors.joining(", "));
+
+            String value = perLevelStr + "  × " + levels + (levels == 1 ? " level = " : " levels = ") + totalStr;
+            result.put(wallLabel.toString(), value);
+        }
+        return result;
+    }
+
+    // Grupuoja sienas pagal sienos/run ilgį (priklausomai nuo scenarijaus) ir rodo
+    // bortų kiekį: per sieną × grupės dydį. Bortai nesikartoja per lygius — vienai platformai.
+    private Map<String, String> buildWallGroupBoardBreakdown(ScaffoldInput input, List<Double> faceLengths,
+                                                              List<Double> scaffoldRuns, LiftInput boardedLift) {
+        Map<String, String> result = new LinkedHashMap<>();
+        if (boardedLift == null) return result;
+
+        double primaryLength = boardedLift.getBoardSize() != null
+                ? boardedLift.getBoardSize().getLengthM() : 3.962;
+        String primaryName = formatTubeSize(primaryLength);
+        LedgerScenario scenario = input.getLedgerScenario() != null
+                ? input.getLedgerScenario() : LedgerScenario.SCENARIO_ONE;
+
+        // Grupuojam pagal board length (TOP: scaffoldRun, BOTTOM: faceLength)
+        Map<Long, List<Integer>> groups = new LinkedHashMap<>();
+        for (int i = 0; i < faceLengths.size(); i++) {
+            double boardLen = isTopFace(i, scenario) ? scaffoldRuns.get(i) : faceLengths.get(i);
+            long key = Math.round(boardLen * 100);
+            groups.computeIfAbsent(key, k -> new ArrayList<>()).add(i);
+        }
+
+        for (List<Integer> wallIndices : groups.values()) {
+            int idx0 = wallIndices.get(0);
+            double boardLen = isTopFace(idx0, scenario) ? scaffoldRuns.get(idx0) : faceLengths.get(idx0);
+
+            // Kiek fleets (pilnų bortų eilių) ir ar reikia dengiamojo fleetinio
+            int primaryFleets = (int) Math.floor(boardLen / primaryLength);
+            double remainder = boardLen - primaryFleets * primaryLength;
+            BoardSize secondary = remainder > 0.1 ? findSmallestBoardCovering(remainder) : null;
+
+            int groupCount = wallIndices.size();
+            int totalPrimaryFleets = primaryFleets * groupCount;
+            int totalPrimaryBoards = totalPrimaryFleets * BOARDS_PER_ROW;
+
+            StringBuilder wallLabel = new StringBuilder("Wall");
+            if (groupCount > 1) wallLabel.append("s");
+            wallLabel.append(" ");
+            for (int i = 0; i < groupCount; i++) {
+                if (i > 0) wallLabel.append(i == groupCount - 1 ? " & " : ", ");
+                wallLabel.append(wallIndices.get(i) + 1);
+            }
+            wallLabel.append(String.format(" (%.2fm)", boardLen));
+
+            StringBuilder perWall = new StringBuilder();
+            perWall.append(primaryFleets).append(primaryFleets == 1 ? " fleet " : " fleets ").append(primaryName);
+            if (secondary != null) {
+                perWall.append(" + 1 fleet ").append(formatTubeSize(secondary.getLengthM()));
+            }
+
+            StringBuilder total = new StringBuilder();
+            total.append(totalPrimaryBoards).append("×").append(primaryName);
+            if (secondary != null) {
+                int totalSecondaryBoards = groupCount * BOARDS_PER_ROW;
+                total.append(", ").append(totalSecondaryBoards).append("×").append(formatTubeSize(secondary.getLengthM()));
+            }
+
+            String value = groupCount + "× (" + perWall + ") = " + total + " boards";
+            result.put(wallLabel.toString(), value);
+        }
+        return result;
     }
 
     // Konvertuoja metro ilgį į žmonėms suprantamą pavadinimą (pvz. 3.962 → "13ft")

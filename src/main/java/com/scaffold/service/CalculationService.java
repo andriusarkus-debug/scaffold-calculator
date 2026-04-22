@@ -90,6 +90,8 @@ public class CalculationService {
                 .standardTubeSummary(result.getStandardTubeSummary())
                 .faceLedgerTubeBreakdown(result.getFaceLedgerTubeBreakdown())
                 .faceBoardBreakdown(result.getFaceBoardBreakdown())
+                .wallGroupLedgerBreakdown(result.getWallGroupLedgerBreakdown())
+                .wallGroupBoardBreakdown(result.getWallGroupBoardBreakdown())
                 .build();
 
         // Sukuriame liftų sąrašą ir susiejame su skaičiavimu

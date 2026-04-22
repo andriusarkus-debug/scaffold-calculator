@@ -76,6 +76,16 @@ public class MaterialResult {
     // Value: "24× 13ft + 6× 8ft  (18.05m)"
     private Map<String, String> faceBoardBreakdown;
 
+    // --- Wall-group ledger breakdown (vienodos sienos sugrupuotos, padauginta per lygius) ---
+    // Key:   "Walls 1 & 3 (15.0m)"
+    // Value: "4×21ft + 4×16ft + 4×13ft + 4×10ft  × 3 levels = 12×21ft, 12×16ft, 12×13ft, 12×10ft"
+    private Map<String, String> wallGroupLedgerBreakdown;
+
+    // --- Wall-group board breakdown (vienodos sienos sugrupuotos, viena platforma) ---
+    // Key:   "Walls 1 & 3 (15.0m)"
+    // Value: "2× (3 fleets 13ft + 1 fleet 6ft) = 36×13ft + 12×6ft"
+    private Map<String, String> wallGroupBoardBreakdown;
+
     // --- Calculations  ---
     private double perimeter;
     private int bays;

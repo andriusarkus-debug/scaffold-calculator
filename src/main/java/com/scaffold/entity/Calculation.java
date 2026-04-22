@@ -158,6 +158,15 @@ public class Calculation {
     @Column(columnDefinition = "TEXT")
     private Map<String, String> faceBoardBreakdown;
 
+    // --- Wall-group breakdowns (vienodų sienų grupės su kiekio × dydžio informacija) ---
+    @Convert(converter = MapStringToJsonConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private Map<String, String> wallGroupLedgerBreakdown;
+
+    @Convert(converter = MapStringToJsonConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private Map<String, String> wallGroupBoardBreakdown;
+
     // equals/hashCode pagal `id` — saugu JPA entitetams su lazy kolekcijomis.
     // Kol id == null (dar neišsaugota), du skirtingi objektai lygūs tik jei tai tas pats instance.
     @Override
