@@ -184,7 +184,7 @@
             <tbody>
               <tr>
                 <td>Standards</td><td class="text-end fw-bold" th:text="${calc.standards}"></td>
-                <td>Ledgers</td><td class="text-end fw-bold" th:text="${calc.ledgers}"></td>
+                <td>Ledgers</td><td class="text-end fw-bold" th:text="${calc.ledgerTubeSummary != null ? #aggregates.sum(calc.ledgerTubeSummary.values()) : calc.ledgers}"></td>
               </tr>
               <tr>
                 <td>Transoms</td><td class="text-end fw-bold" th:text="${calc.transoms}"></td>

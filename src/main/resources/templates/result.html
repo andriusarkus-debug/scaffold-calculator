@@ -155,8 +155,8 @@
             <thead><tr><th>Material</th><th class="text-end">Qty</th></tr></thead>
             <tbody>
               <tr><td>Standards (uprights)</td>  <td class="text-end fw-bold" th:text="${result.standards}"></td></tr>
-              <tr><td>Ledgers</td>               <td class="text-end fw-bold" th:text="${result.ledgers}"></td></tr>
-              <tr><td>Handrails</td>             <td class="text-end fw-bold" th:text="${result.handrails}"></td></tr>
+              <tr><td>Ledgers</td>               <td class="text-end fw-bold" th:text="${result.ledgerTubeSummary != null ? #aggregates.sum(result.ledgerTubeSummary.values()) : result.ledgers}"></td></tr>
+              <tr><td>Handrails</td>             <td class="text-end fw-bold" th:text="${result.handrailTubeSummary != null ? #aggregates.sum(result.handrailTubeSummary.values()) : result.handrails}"></td></tr>
               <tr><td>Transoms</td>              <td class="text-end fw-bold" th:text="${result.transoms}"></td></tr>
               <tr><td>Boards</td>               <td class="text-end fw-bold" th:text="${result.boards}"></td></tr>
               <tr><td>Base plates</td>           <td class="text-end fw-bold" th:text="${result.basePlates}"></td></tr>
@@ -429,12 +429,12 @@
               <tr><td>Standards</td>
                   <td class="text-end text-muted" th:text="${result.standards}"></td>
                   <td class="text-end buffer-qty" th:text="${T(java.lang.Math).ceil(result.standards * 1.1).intValue()}"></td></tr>
-              <tr><td>Ledgers</td>
-                  <td class="text-end text-muted" th:text="${result.ledgers}"></td>
-                  <td class="text-end buffer-qty" th:text="${T(java.lang.Math).ceil(result.ledgers * 1.1).intValue()}"></td></tr>
-              <tr><td>Handrails</td>
-                  <td class="text-end text-muted" th:text="${result.handrails}"></td>
-                  <td class="text-end buffer-qty" th:text="${T(java.lang.Math).ceil(result.handrails * 1.1).intValue()}"></td></tr>
+              <tr th:with="ledgersTotal=${result.ledgerTubeSummary != null ? #aggregates.sum(result.ledgerTubeSummary.values()) : result.ledgers}"><td>Ledgers</td>
+                  <td class="text-end text-muted" th:text="${ledgersTotal}"></td>
+                  <td class="text-end buffer-qty" th:text="${T(java.lang.Math).ceil(ledgersTotal * 1.1).intValue()}"></td></tr>
+              <tr th:with="handrailsTotal=${result.handrailTubeSummary != null ? #aggregates.sum(result.handrailTubeSummary.values()) : result.handrails}"><td>Handrails</td>
+                  <td class="text-end text-muted" th:text="${handrailsTotal}"></td>
+                  <td class="text-end buffer-qty" th:text="${T(java.lang.Math).ceil(handrailsTotal * 1.1).intValue()}"></td></tr>
               <tr><td>Transoms</td>
                   <td class="text-end text-muted" th:text="${result.transoms}"></td>
                   <td class="text-end buffer-qty" th:text="${T(java.lang.Math).ceil(result.transoms * 1.1).intValue()}"></td></tr>
