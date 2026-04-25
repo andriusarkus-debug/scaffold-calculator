@@ -419,8 +419,13 @@
       const mx = (x1+x2)/2 + nx*off;
       const my = (y1+y2)/2 + ny*off;
 
-      svgEl.appendChild(svgEl2('circle', {cx: mx + nx*14, cy: my + ny*14, r:'7', fill: color}));
-      const bt = svgEl2('text', {x: mx + nx*14, y: my + ny*14,
+      // Badge'o pozicija: horizontalioms sienoms (top/bottom) — virš/po tekstu vertikaliai;
+      // vertikalioms sienoms (left/right) — virš teksto, kad nepersidengtų su plačiu "Width (W)" label'u
+      const isVerticalFace = (nx !== 0);
+      const badgeDx = 0;
+      const badgeDy = isVerticalFace ? -14 : ny*14;
+      svgEl.appendChild(svgEl2('circle', {cx: mx + badgeDx, cy: my + badgeDy, r:'7', fill: color}));
+      const bt = svgEl2('text', {x: mx + badgeDx, y: my + badgeDy,
         'text-anchor':'middle','dominant-baseline':'middle','font-size':'9','fill':'white','font-weight':'bold'});
       bt.textContent = badge;
       svgEl.appendChild(bt);
