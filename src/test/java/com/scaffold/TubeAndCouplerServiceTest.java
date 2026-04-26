@@ -123,10 +123,11 @@ class TubeAndCouplerServiceTest {
         MaterialResult r = service.calculate(
                 buildInput(HouseShape.RECTANGULAR, 10, 7, 0, 0));
 
-        // swayBracing: (1+1+1+1) sets × 2 liftai × 2 = 16
-        // bracesPerLift: 4+3+4+3 = 14 → ledgerBracing = 14*2 = 28
-        assertEquals(16, r.getSwayBracing(), "Sway bracing: 4 rinkiniai × 2 liftai × 2");
-        assertEquals(28, r.getLedgerBracing(), "Ledger bracing: 14/liftas × 2 liftai");
+        // swayBracing: (1+1+1+1) sets × 2 liftai = 8  (formulė: swayBracingSets * lifts)
+        // bracesPerLift (faceLengths): ceil(6/2)+ceil(4/2)+ceil(6/2)+ceil(4/2) = 3+2+3+2 = 10
+        // ledgerBracing = 10 * 2 liftai = 20
+        assertEquals(8,  r.getSwayBracing(),   "Sway bracing: 4 rinkiniai × 2 liftai");
+        assertEquals(20, r.getLedgerBracing(), "Ledger bracing: 10/liftas × 2 liftai");
     }
 
     @Test
@@ -153,16 +154,19 @@ class TubeAndCouplerServiceTest {
         MaterialResult r = service.calculate(
                 buildInput(HouseShape.RECTANGULAR, 10, 7, 0, 0));
 
-        // rightAngle = (132+176)*2 + 28 = 644
-        // swivel     = 16*2 + 28 = 60
+        // rightAngle (standartais grįsta formulė — long tubes su sleeve coupleriais):
+        //   ledgerRACouplers   = 44 × (2+1) + 4 × 2 × (2+1) = 132 + 24 = 156
+        //   handrailRACouplers = 44 × 2 × 2 + 4 × 4 × 2     = 176 + 32 = 208
+        //   rightAngle = 156 + 208 + 20 = 384  (ledgerBracing=20 pagal faceLengths)
+        // swivel     = 8*2 + 20 = 36  (sway=8 actual, ledgerBracing=20 actual pagal faceLengths)
         // sleeve: face 10m=3 tubes→2 joints, face 7m=2 tubes→1 joint
         //   ledger joins: (2+1+2+1) × 2*(2+1) = 6 × 6 = 36
         //   handrail joins: 6 × 2*2 = 24
         //   standard joins: tubesPerStandard=1 → 0
         //   sleeve = 36 + 24 + 0 = 60
         // putlog = (transoms + returnPlatformTransoms) * 2 = (172+16)*2 = 376
-        assertEquals(644, r.getRightAngleCouplers(), "Right-angle couplers");
-        assertEquals(60,  r.getSwivelCouplers(),      "Swivel couplers");
+        assertEquals(384, r.getRightAngleCouplers(), "Right-angle couplers");
+        assertEquals(36,  r.getSwivelCouplers(),      "Swivel couplers");
         assertEquals(60,  r.getSleeveCouplers(),       "Sleeve couplers");
         assertEquals(376, r.getPutlogCouplers(),       "Putlog couplers: (172+16)×2");
     }
@@ -262,10 +266,11 @@ class TubeAndCouplerServiceTest {
         MaterialResult r = service.calculate(
                 buildInput(HouseShape.L_SHAPE, 10, 8, 4, 3));
 
-        // swayBracing: 6 sienos × 1 rinkinys = 6 sets × 2 × 2 = 24
-        // bracesPerLift: 4+2+2+2+3+3=16 → ledgerBracing = 16*2 = 32
-        assertEquals(24, r.getSwayBracing(),   "L forma: 6 sienų sway bracing");
-        assertEquals(32, r.getLedgerBracing(), "L forma: 16/liftas × 2 liftai");
+        // L_SHAPE faces (L=10, W=8, CL=4, CW=3): [10, 5, 4, 3, 6, 8]
+        // swayBracing sets per face: ceil(bays/6) = 1+1+1+1+1+1 = 6 → 6 * 2 liftai = 12
+        // bracesPerLift: ceil(bays/2) = 3+2+2+1+2+3 = 13 → ledgerBracing = 13 * 2 = 26
+        assertEquals(12, r.getSwayBracing(),   "L forma: 6 sienų sway bracing × 2 liftai");
+        assertEquals(26, r.getLedgerBracing(), "L forma: 13/liftas × 2 liftai");
     }
 
     @Test

@@ -269,8 +269,26 @@ import java.util.stream.Collectors;
         // Kiekvienas ledger brace: 1× swivel coupler + 1× right-angle coupler
         // Kiekvienas sway brace: 2× swivel couplers (viršus + apačia)
         int swivelCouplers = swayBracing * 2 + ledgerBracing;
-        // Right-angle couplers: tik ledgeriai ir handrailai (transomams naudojami putlog couplers atskirai)
-        int rightAngleCouplers = (ledgers + handrails) * 2 + ledgerBracing;
+
+        // Right-angle couplers — skaičiuojama pagal fizinius standartus, ne logines pozicijas.
+        // Realybėje ledger ir handrail vamzdžiai yra ilgi (pvz. 21ft) ir jungiami sleeve coupleriais
+        // tarp standartų — todėl prie kiekvieno standarto vamzdis fiksuojamas tik VIENU right-angle coupler
+        // (anksčiau senas formulė `(ledgers + handrails) * 2` skaičiavo tarsi kiekvienas bay turi atskirą
+        // trumpą vamzdį, dėl ko atsirasdavo ~28% overcount).
+        //
+        // Per standartą:
+        //   • (lifts + 1) ledger couplers — kiekvienam ledger lygiui (base + top per kiekvieną liftą)
+        //   • 2 × lifts handrail couplers — top rail + mid rail per kiekvieną liftą
+        //
+        // Plius perpendikuliarūs return ledgeriai/handrailai kampuose (jungia inside ↔ outside eiles).
+        // Kiekvienas return tube turi 2 galus → 2 right-angle couplers per lygį/rail'ą.
+        //
+        // (transomams naudojami atskiri putlog couplers, čia neįskaičiuoti)
+        int ledgerRACouplers = standardPositions * (lifts + 1)
+                + returnCount * 2 * (lifts + 1);
+        int handrailRACouplers = standardPositions * 2 * lifts
+                + returnCount * 4 * lifts;
+        int rightAngleCouplers = ledgerRACouplers + handrailRACouplers + ledgerBracing;
 
         // Sleeve couplers: standartų jungtys + ledger/handrail jungtys
         // Kiekvienas run su N vamzdžių reikalauja N-1 sleeve couplerių
