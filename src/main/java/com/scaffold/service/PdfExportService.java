@@ -56,12 +56,15 @@ public class PdfExportService {
             addLiftsTable(document, calc);
             addMainComponents(document, calc);
             addFittings(document, calc);
+            // Force page break — Loading Bay + Ladder Tower on a fresh page
+            // (prevents orphan split where heading + 1 row land at bottom of previous page)
+            document.newPage();
             addLoadingBay(document, calc);
             addLadderTower(document, calc);
 
-            // Force page break — keep delivery + breakdowns together on a fresh page
+            // Force page break — Lorry Loading Summary + breakdowns on a fresh page
             document.newPage();
-            addDeliverySummary(document, calc);
+            addLorryLoadingSummary(document, calc);
             addTubeBreakdown(document, calc);
             addBoardBreakdown(document, calc);
 
@@ -123,6 +126,9 @@ public class PdfExportService {
 
         PdfPTable t = new PdfPTable(new float[]{1, 2, 2, 2});
         t.setWidthPercentage(100);
+        t.setKeepTogether(true);
+        t.setSplitLate(true);
+        t.setHeaderRows(1);
         addHeaderRow(t, "Lift #", "Height", "Has boards", "Board size");
         for (CalculationLift lift : lifts) {
             addRow(t,
@@ -185,6 +191,9 @@ public class PdfExportService {
 
         PdfPTable t = new PdfPTable(new float[]{4, 1, 4, 1});
         t.setWidthPercentage(100);
+        t.setKeepTogether(true);
+        t.setSplitLate(true);
+        t.setHeaderRows(1);
         addHeaderRow(t, "Material", "Qty", "Material", "Qty");
 
         // Tubes
@@ -212,6 +221,9 @@ public class PdfExportService {
 
         PdfPTable t = new PdfPTable(new float[]{4, 1, 4, 1});
         t.setWidthPercentage(100);
+        t.setKeepTogether(true);
+        t.setSplitLate(true);
+        t.setHeaderRows(1);
         addHeaderRow(t, "Material", "Qty", "Material", "Qty");
 
         // Tubes
@@ -259,58 +271,149 @@ public class PdfExportService {
         t.addCell(q2);
     }
 
-    private void addDeliverySummary(Document doc, Calculation calc) throws DocumentException {
-        Map<String, Integer> tubes = calc.getTubeDeliverySummary();
-        Map<String, Integer> boards = calc.getBoardSummary();
+    /**
+     * Lorry Loading Summary — pilnas yard operator pick list įsigant kroviniui:
+     * tubes (visi šaltiniai), boards (visi šaltiniai), fittings (visi couplers),
+     * other (ladders, gates, base plates, sole boards, toeboards, ir t.t.).
+     */
+    private void addLorryLoadingSummary(Document doc, Calculation calc) throws DocumentException {
+        int liftCount = calc.getLifts() != null ? calc.getLifts().size() : 0;
+        LoadingBayResult lb = liftCount > 0 ? accessTowerService.calculateLoadingBay(liftCount) : null;
+        LadderTowerResult lt = liftCount > 0 ? accessTowerService.calculateLadderTower(liftCount) : null;
 
-        boolean hasTubes  = tubes  != null && !tubes.isEmpty();
-        boolean hasBoards = boards != null && !boards.isEmpty();
-        if (!hasTubes && !hasBoards) return;
+        // --- Konsoliduoti TUBES (pridedam access tower vamzdžius prie wall scaffold) ---
+        Map<String, Integer> tubes = new java.util.LinkedHashMap<>(
+                calc.getTubeDeliverySummary() != null ? calc.getTubeDeliverySummary() : Map.of());
+        if (lb != null) {
+            mergeTube(tubes, "5ft", lb.getTubes5ft());
+            mergeTube(tubes, "6ft", lb.getTubes6ft());
+            mergeTube(tubes, "8ft", lb.getTubes8ft());
+            mergeTube(tubes, "10ft", lb.getTubes10ft());
+            mergeTube(tubes, "13ft", lb.getTubes13ft());
+            mergeTube(tubes, "21ft", lb.getTubes21ft());
+        }
+        if (lt != null) {
+            mergeTube(tubes, "5ft", lt.getTubes5ft());
+            mergeTube(tubes, "8ft", lt.getTubes8ft());
+            mergeTube(tubes, "10ft", lt.getTubes10ft());
+            mergeTube(tubes, "13ft", lt.getTubes13ft());
+        }
+        tubes = sortTubeSizes(tubes);
 
-        addSectionHeading(doc, "Delivery Summary — Tubes & Boards by Size");
+        // --- Konsoliduoti BOARDS ---
+        Map<String, Integer> boards = new java.util.LinkedHashMap<>(
+                calc.getBoardSummary() != null ? calc.getBoardSummary() : Map.of());
+        if (lb != null) {
+            mergeTube(boards, "13ft", lb.getBoards13ft());
+            mergeTube(boards, "5ft", lb.getBoards5ft());
+        }
+        if (lt != null) {
+            mergeTube(boards, "13ft", lt.getBoards13ft());
+            mergeTube(boards, "8ft", lt.getBoards8ft());
+            mergeTube(boards, "5ft", lt.getBoards5ft());
+        }
+        boards = sortTubeSizes(boards);
 
-        // Side-by-side: tubes on left, boards on right
-        PdfPTable wrap = new PdfPTable(2);
-        wrap.setWidthPercentage(100);
-        wrap.setSpacingAfter(10);
+        // --- Konsoliduoti FITTINGS (couplers) ---
+        int totalRA = calc.getRightAngleCouplers()
+                + (lb != null ? lb.getRightAngleCouplers() : 0)
+                + (lt != null ? lt.getRightAngleCouplers() : 0);
+        int totalSwivel = calc.getSwivelCouplers()
+                + (lb != null ? lb.getSwivelCouplers() : 0)
+                + (lt != null ? lt.getSwivelCouplers() : 0);
+        int totalSleeve = calc.getSleeveCouplers();
+        int totalPutlog = calc.getPutlogCouplers()
+                + (lb != null ? lb.getPutlogCouplers() : 0)
+                + (lt != null ? lt.getPutlogCouplers() : 0);
 
-        // Tubes column
-        PdfPCell tubesCell = new PdfPCell();
-        tubesCell.setBorder(0);
-        tubesCell.setPaddingRight(8);
-        if (hasTubes) {
-            PdfPTable t = new PdfPTable(new float[]{2, 2});
-            t.setWidthPercentage(100);
-            addHeaderRow(t, "Tubes (all)", "Total qty");
-            int total = 0;
-            for (Map.Entry<String, Integer> e : tubes.entrySet()) {
-                addRow(t, e.getKey(), String.valueOf(e.getValue()));
-                total += e.getValue();
-            }
+        addSectionHeading(doc, "Lorry Loading Summary — Yard Pick List");
+        Paragraph note = new Paragraph(
+                "Total quantities including wall scaffold + loading bay + ladder tower",
+                META_FONT);
+        note.setSpacingAfter(6);
+        doc.add(note);
+
+        // 2x2 grid of mini-tables: TUBES | BOARDS / FITTINGS | OTHER
+        PdfPTable grid = new PdfPTable(2);
+        grid.setWidthPercentage(100);
+        grid.setSpacingAfter(10);
+        grid.setKeepTogether(true);
+
+        // TUBES
+        grid.addCell(buildSummaryCell("Tubes (all)", tubes, true));
+        // BOARDS
+        grid.addCell(buildSummaryCell("Boards (all)", boards, true));
+
+        // FITTINGS
+        Map<String, Integer> fittings = new java.util.LinkedHashMap<>();
+        if (totalRA > 0)     fittings.put("Right-angle couplers", totalRA);
+        if (totalSwivel > 0) fittings.put("Swivel couplers",      totalSwivel);
+        if (totalSleeve > 0) fittings.put("Sleeve couplers",      totalSleeve);
+        if (totalPutlog > 0) fittings.put("Putlog couplers",      totalPutlog);
+        grid.addCell(buildSummaryCell("Fittings (couplers)", fittings, true));
+
+        // OTHER COMPONENTS
+        Map<String, Integer> other = new java.util.LinkedHashMap<>();
+        if (calc.getStandards() > 0)            other.put("Standards (vamzdžiai)", calc.getStandards());
+        int basePlates = calc.getBasePlates();
+        int soleBoards = calc.getSoleBoards() + (lb != null ? lb.getSoleBoards() : 0);
+        if (basePlates > 0) other.put("Base plates", basePlates);
+        if (soleBoards > 0) other.put("Sole boards", soleBoards);
+        if (calc.getToeboards() > 0)            other.put("Toeboards", calc.getToeboards());
+        if (calc.getAdvanceGuardRailSets() > 0) other.put("Advance guard rail sets", calc.getAdvanceGuardRailSets());
+        if (lt != null && lt.getLadders4m() > 0)        other.put("Ladders 4m", lt.getLadders4m());
+        if (lt != null && lt.getLadderGates() > 0)      other.put("Ladder gates", lt.getLadderGates());
+        if (lb != null && lb.getLoadingBayGates() > 0)  other.put("Loading bay gates", lb.getLoadingBayGates());
+        grid.addCell(buildSummaryCell("Other components", other, false)); // no TOTAL row — these are heterogeneous items
+
+        doc.add(grid);
+    }
+
+    private PdfPCell buildSummaryCell(String title, Map<String, Integer> data, boolean showTotal) {
+        PdfPCell cell = new PdfPCell();
+        cell.setBorder(0);
+        cell.setPadding(4);
+        if (data == null || data.isEmpty()) {
+            cell.addElement(new Phrase(""));
+            return cell;
+        }
+        PdfPTable t = new PdfPTable(new float[]{3, 1});
+        t.setWidthPercentage(100);
+        t.setKeepTogether(true);
+        t.setSplitLate(true);
+        addHeaderRow(t, title, "Qty");
+        int total = 0;
+        for (Map.Entry<String, Integer> e : data.entrySet()) {
+            addRow(t, e.getKey(), String.valueOf(e.getValue()));
+            total += e.getValue();
+        }
+        if (showTotal) {
             addTotalRow(t, "TOTAL", total);
-            tubesCell.addElement(t);
         }
-        wrap.addCell(tubesCell);
+        cell.addElement(t);
+        return cell;
+    }
 
-        // Boards column
-        PdfPCell boardsCell = new PdfPCell();
-        boardsCell.setBorder(0);
-        boardsCell.setPaddingLeft(8);
-        if (hasBoards) {
-            PdfPTable b = new PdfPTable(new float[]{2, 2});
-            b.setWidthPercentage(100);
-            addHeaderRow(b, "Boards", "Total qty");
-            int total = 0;
-            for (Map.Entry<String, Integer> e : boards.entrySet()) {
-                addRow(b, e.getKey(), String.valueOf(e.getValue()));
-                total += e.getValue();
+    private static void mergeTube(Map<String, Integer> map, String key, int qty) {
+        if (qty <= 0) return;
+        map.merge(key, qty, Integer::sum);
+    }
+
+    /** Rūšiuoja vamzdžių dydžius pagal fizinį ilgį (5ft, 6ft, 8ft, 10ft, 13ft, 16ft, 21ft). */
+    private static Map<String, Integer> sortTubeSizes(Map<String, Integer> input) {
+        java.util.List<String> order = java.util.List.of("5ft", "6ft", "8ft", "10ft", "13ft", "16ft", "21ft");
+        Map<String, Integer> sorted = new java.util.LinkedHashMap<>();
+        for (String size : order) {
+            Integer v = input.get(size);
+            if (v != null && v > 0) sorted.put(size, v);
+        }
+        // any other sizes not in known order — append at end
+        for (Map.Entry<String, Integer> e : input.entrySet()) {
+            if (!order.contains(e.getKey()) && e.getValue() != null && e.getValue() > 0) {
+                sorted.put(e.getKey(), e.getValue());
             }
-            addTotalRow(b, "TOTAL", total);
-            boardsCell.addElement(b);
         }
-        wrap.addCell(boardsCell);
-
-        doc.add(wrap);
+        return sorted;
     }
 
     private void addTotalRow(PdfPTable t, String label, int total) {
@@ -334,6 +437,9 @@ public class PdfExportService {
 
         PdfPTable t = new PdfPTable(new float[]{2, 5});
         t.setWidthPercentage(100);
+        t.setKeepTogether(true);
+        t.setSplitLate(true);
+        t.setHeaderRows(1);
         addHeaderRow(t, "Wall group", "Tubes needed");
         for (Map.Entry<String, String> e : wallGroupLedgers.entrySet()) {
             addRow(t, e.getKey(), e.getValue());
@@ -350,6 +456,9 @@ public class PdfExportService {
 
         PdfPTable t = new PdfPTable(new float[]{2, 5});
         t.setWidthPercentage(100);
+        t.setKeepTogether(true);
+        t.setSplitLate(true);
+        t.setHeaderRows(1);
         addHeaderRow(t, "Wall group", "Boards needed");
         for (Map.Entry<String, String> e : wallGroupBoards.entrySet()) {
             addRow(t, e.getKey(), e.getValue());
@@ -369,6 +478,9 @@ public class PdfExportService {
     private PdfPTable newMaterialTable() {
         PdfPTable t = new PdfPTable(new float[]{4, 1});
         t.setWidthPercentage(100);
+        t.setKeepTogether(true);   // sekcija turi tilpti viename puslapyje (jei netelpa, perkeliama nauja)
+        t.setSplitLate(true);
+        t.setHeaderRows(1);        // jei vis dėl to nepavyksta — antraštė kartojasi sekančiame puslapyje
         addHeaderRow(t, "Material", "QTY");
         return t;
     }
@@ -376,6 +488,8 @@ public class PdfExportService {
     private PdfPTable newKeyValueTable() {
         PdfPTable t = new PdfPTable(new float[]{2, 3, 2, 3});
         t.setWidthPercentage(100);
+        t.setKeepTogether(true);
+        t.setSplitLate(true);
         return t;
     }
 
