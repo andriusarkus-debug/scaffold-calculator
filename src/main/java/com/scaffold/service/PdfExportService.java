@@ -353,13 +353,13 @@ public class PdfExportService {
         grid.addCell(buildSummaryCell("Fittings (couplers)", fittings, true));
 
         // OTHER COMPONENTS
+        // Standards (vamzdžiai) jau įskaičiuoti į Tubes pagal dydį.
+        // Toeboards praleidžiami pick list'e — jie traktuojami kaip dalis Boards stulpelio.
         Map<String, Integer> other = new java.util.LinkedHashMap<>();
-        if (calc.getStandards() > 0)            other.put("Standards (vamzdžiai)", calc.getStandards());
         int basePlates = calc.getBasePlates();
         int soleBoards = calc.getSoleBoards() + (lb != null ? lb.getSoleBoards() : 0);
         if (basePlates > 0) other.put("Base plates", basePlates);
         if (soleBoards > 0) other.put("Sole boards", soleBoards);
-        if (calc.getToeboards() > 0)            other.put("Toeboards", calc.getToeboards());
         if (calc.getAdvanceGuardRailSets() > 0) other.put("Advance guard rail sets", calc.getAdvanceGuardRailSets());
         if (lt != null && lt.getLadders4m() > 0)        other.put("Ladders 4m", lt.getLadders4m());
         if (lt != null && lt.getLadderGates() > 0)      other.put("Ladder gates", lt.getLadderGates());
