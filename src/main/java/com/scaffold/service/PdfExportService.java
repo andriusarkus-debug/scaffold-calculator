@@ -360,7 +360,6 @@ public class PdfExportService {
         int soleBoards = calc.getSoleBoards() + (lb != null ? lb.getSoleBoards() : 0);
         if (basePlates > 0) other.put("Base plates", basePlates);
         if (soleBoards > 0) other.put("Sole boards", soleBoards);
-        if (calc.getAdvanceGuardRailSets() > 0) other.put("Advance guard rail sets", calc.getAdvanceGuardRailSets());
         if (lt != null && lt.getLadders4m() > 0)        other.put("Ladders 4m", lt.getLadders4m());
         if (lt != null && lt.getLadderGates() > 0)      other.put("Ladder gates", lt.getLadderGates());
         if (lb != null && lb.getLoadingBayGates() > 0)  other.put("Loading bay gates", lb.getLoadingBayGates());
