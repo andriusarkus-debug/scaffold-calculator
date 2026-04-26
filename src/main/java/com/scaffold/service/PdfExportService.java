@@ -13,6 +13,9 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.scaffold.entity.Calculation;
 import com.scaffold.entity.CalculationLift;
+import com.scaffold.model.LadderTowerResult;
+import com.scaffold.model.LoadingBayResult;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.awt.Color;
@@ -26,7 +29,10 @@ import java.util.Map;
  * Uses OpenPDF (LGPL/MPL fork of iText) — pure Java PDF generation, no HTML conversion.
  */
 @Service
+@RequiredArgsConstructor
 public class PdfExportService {
+
+    private final AccessTowerService accessTowerService;
 
     // --- Fonts ---
     private static final Font TITLE_FONT   = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, new Color(30, 58, 138));
@@ -50,6 +56,11 @@ public class PdfExportService {
             addLiftsTable(document, calc);
             addMainComponents(document, calc);
             addFittings(document, calc);
+            addLoadingBay(document, calc);
+            addLadderTower(document, calc);
+
+            // Force page break — keep delivery + breakdowns together on a fresh page
+            document.newPage();
             addDeliverySummary(document, calc);
             addTubeBreakdown(document, calc);
             addBoardBreakdown(document, calc);
@@ -163,6 +174,89 @@ public class PdfExportService {
         }
         doc.add(t);
         spacer(doc, 10);
+    }
+
+    private void addLoadingBay(Document doc, Calculation calc) throws DocumentException {
+        int liftCount = calc.getLifts() != null ? calc.getLifts().size() : 0;
+        if (liftCount == 0) return;
+        LoadingBayResult lb = accessTowerService.calculateLoadingBay(liftCount);
+
+        addSectionHeading(doc, "Loading Bay (" + liftCount + " lifts)");
+
+        PdfPTable t = new PdfPTable(new float[]{4, 1, 4, 1});
+        t.setWidthPercentage(100);
+        addHeaderRow(t, "Material", "Qty", "Material", "Qty");
+
+        // Tubes
+        addAccessRow(t, "Tubes 21ft", lb.getTubes21ft(),  "Tubes 13ft", lb.getTubes13ft());
+        addAccessRow(t, "Tubes 10ft", lb.getTubes10ft(),  "Tubes 8ft",  lb.getTubes8ft());
+        addAccessRow(t, "Tubes 6ft",  lb.getTubes6ft(),   "Tubes 5ft",  lb.getTubes5ft());
+        // Boards & other
+        addAccessRow(t, "Boards 13ft", lb.getBoards13ft(), "Boards 5ft", lb.getBoards5ft());
+        addAccessRow(t, "Sole boards", lb.getSoleBoards(), "Loading bay gates", lb.getLoadingBayGates());
+        // Fittings
+        addAccessRow(t, "Right-angle couplers", lb.getRightAngleCouplers(),
+                        "Putlog couplers",      lb.getPutlogCouplers());
+        addAccessRow(t, "Swivel couplers", lb.getSwivelCouplers(), "", -1);
+
+        doc.add(t);
+        spacer(doc, 8);
+    }
+
+    private void addLadderTower(Document doc, Calculation calc) throws DocumentException {
+        int liftCount = calc.getLifts() != null ? calc.getLifts().size() : 0;
+        if (liftCount == 0) return;
+        LadderTowerResult lt = accessTowerService.calculateLadderTower(liftCount);
+
+        addSectionHeading(doc, "Ladder Tower (" + liftCount + " lifts)");
+
+        PdfPTable t = new PdfPTable(new float[]{4, 1, 4, 1});
+        t.setWidthPercentage(100);
+        addHeaderRow(t, "Material", "Qty", "Material", "Qty");
+
+        // Tubes
+        addAccessRow(t, "Tubes 13ft", lt.getTubes13ft(), "Tubes 10ft", lt.getTubes10ft());
+        addAccessRow(t, "Tubes 8ft",  lt.getTubes8ft(),  "Tubes 5ft",  lt.getTubes5ft());
+        // Boards
+        addAccessRow(t, "Boards 13ft", lt.getBoards13ft(), "Boards 8ft", lt.getBoards8ft());
+        addAccessRow(t, "Boards 5ft",  lt.getBoards5ft(),  "", -1);
+        // Access
+        addAccessRow(t, "Ladders 4m", lt.getLadders4m(), "Ladder gates", lt.getLadderGates());
+        // Fittings
+        addAccessRow(t, "Right-angle couplers", lt.getRightAngleCouplers(),
+                        "Putlog couplers",      lt.getPutlogCouplers());
+        addAccessRow(t, "Swivel couplers", lt.getSwivelCouplers(), "", -1);
+
+        doc.add(t);
+        spacer(doc, 8);
+    }
+
+    /** Add a 4-column row (label-qty pair × 2). Pass qty=-1 + empty label for the right-side empty cell. */
+    private void addAccessRow(PdfPTable t, String label1, int qty1, String label2, int qty2) {
+        boolean zebra = (t.getRows().size() % 2 == 0);
+        Font bold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.BLACK);
+
+        PdfPCell l1 = new PdfPCell(new Phrase(label1, CELL_FONT));
+        l1.setPadding(4);
+        if (zebra) l1.setBackgroundColor(ZEBRA_BG);
+        t.addCell(l1);
+
+        PdfPCell q1 = new PdfPCell(new Phrase(String.valueOf(qty1), bold));
+        q1.setPadding(4);
+        q1.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        if (zebra) q1.setBackgroundColor(ZEBRA_BG);
+        t.addCell(q1);
+
+        PdfPCell l2 = new PdfPCell(new Phrase(label2, CELL_FONT));
+        l2.setPadding(4);
+        if (zebra) l2.setBackgroundColor(ZEBRA_BG);
+        t.addCell(l2);
+
+        PdfPCell q2 = new PdfPCell(new Phrase(qty2 < 0 ? "" : String.valueOf(qty2), bold));
+        q2.setPadding(4);
+        q2.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        if (zebra) q2.setBackgroundColor(ZEBRA_BG);
+        t.addCell(q2);
     }
 
     private void addDeliverySummary(Document doc, Calculation calc) throws DocumentException {
