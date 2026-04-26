@@ -79,6 +79,13 @@
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
 
+        <!-- OpenPDF: PDF generation (LGPL/MPL fork of iText) -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>1.4.2</version>
+        </dependency>
+
         <!-- Lombok: reduces boilerplate (getters, setters, constructors) -->
         <dependency>
             <groupId>org.projectlombok</groupId>

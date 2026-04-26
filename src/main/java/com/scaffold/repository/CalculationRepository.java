@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CalculationRepository extends JpaRepository<Calculation, Long> {
 
@@ -16,4 +17,8 @@ public interface CalculationRepository extends JpaRepository<Calculation, Long> 
     // Grąžina visus skaičiavimus su user ir liftais viena užklausa
     @Query("SELECT c FROM Calculation c LEFT JOIN FETCH c.lifts LEFT JOIN FETCH c.user ORDER BY c.createdAt DESC")
     List<Calculation> findAllByOrderByCreatedAtDesc();
+
+    // Grąžina vieną skaičiavimą su liftais ir vartotoju (PDF eksportui)
+    @Query("SELECT c FROM Calculation c LEFT JOIN FETCH c.lifts LEFT JOIN FETCH c.user WHERE c.id = :id")
+    Optional<Calculation> findByIdWithLiftsAndUser(@Param("id") Long id);
 }

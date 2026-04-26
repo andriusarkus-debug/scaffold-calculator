@@ -53,10 +53,11 @@ public class CalculatorController {
             input.normalizeForCalculation(liftCount);
 
             MaterialResult result = tubeAndCouplerService.calculate(input);
-            calculationService.save(input, result, currentUser);
+            com.scaffold.entity.Calculation saved = calculationService.save(input, result, currentUser);
 
             model.addAttribute("result", result);
             model.addAttribute("input", input);
+            model.addAttribute("calculationId", saved.getId()); // PDF eksporto nuorodai
             return "result";
 
         } catch (DomainException e) {

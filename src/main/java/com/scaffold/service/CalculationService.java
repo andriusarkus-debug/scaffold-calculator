@@ -117,6 +117,12 @@ public class CalculationService {
         return deduplicate(calculationRepository.findByUserIdOrderByCreatedAtDesc(userId));
     }
 
+    // Grąžina vieną skaičiavimą su liftais ir vartotoju (PDF eksportui)
+    public Calculation findById(Long id) {
+        return calculationRepository.findByIdWithLiftsAndUser(id)
+                .orElseThrow(() -> new IllegalArgumentException("Calculation not found: " + id));
+    }
+
     // Grąžina visų vartotojų skaičiavimų istoriją (ROLE_MANAGER+)
     public List<Calculation> findAll() {
         return deduplicate(calculationRepository.findAllByOrderByCreatedAtDesc());

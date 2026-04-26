@@ -153,6 +153,15 @@
             User: <strong th:text="${calc.user.username}" style="color:#1e293b;"></strong>
           </p>
 
+          <!-- Export PDF -->
+          <div class="mb-3">
+            <a th:href="@{/history/{id}/pdf(id=${calc.id})}"
+               class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-2">
+              <i class="bi bi-file-earmark-pdf-fill"></i>
+              Download PDF
+            </a>
+          </div>
+
           <!-- Stat pills -->
           <div class="d-flex flex-wrap gap-2 mb-3">
             <span class="stat-pill">
