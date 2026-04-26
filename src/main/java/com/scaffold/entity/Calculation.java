@@ -3,6 +3,7 @@ package com.scaffold.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.scaffold.entity.converter.MapToJsonConverter;
 import com.scaffold.entity.converter.MapStringToJsonConverter;
+import com.scaffold.model.TubeDeliveryUtil;
 import com.scaffold.model.enums.HouseShape;
 import com.scaffold.model.enums.LedgerScenario;
 import com.scaffold.model.enums.RoofType;
@@ -179,5 +180,16 @@ public class Calculation {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    /**
+     * Konsoliduotas vamzdžių sąrašas pagal dydį (yard operator delivery summary).
+     * @Transient — JPA neturi bandyti šio atvaizduoti į DB stulpelį.
+     */
+    @Transient
+    public java.util.Map<String, Integer> getTubeDeliverySummary() {
+        return TubeDeliveryUtil.buildTubeSummary(
+                standardTubeSummary, ledgerTubeSummary, handrailTubeSummary, ledgerBraceTubeSummary,
+                transoms, swayBraceTubeSize, swayBraceTubeCount);
     }
 }

@@ -95,4 +95,14 @@ public class MaterialResult {
     // --- Access towers ---
     private LoadingBayResult loadingBay;
     private LadderTowerResult ladderTower;
+
+    /**
+     * Konsoliduotas vamzdžių sąrašas pagal dydį — kiekvienam yard operatoriui,
+     * suskaičiuoja standartus, ledgerius, handrailus, ledger brace, transomus ir sway brace.
+     */
+    public Map<String, Integer> getTubeDeliverySummary() {
+        return TubeDeliveryUtil.buildTubeSummary(
+                standardTubeSummary, ledgerTubeSummary, handrailTubeSummary, ledgerBraceTubeSummary,
+                transoms, swayBraceTubeSize, swayBraceTubeCount);
+    }
 }

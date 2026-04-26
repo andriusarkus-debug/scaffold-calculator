@@ -197,7 +197,7 @@
               </tr>
               <tr>
                 <td>Handrails</td><td class="text-end fw-bold" th:text="${calc.handrailTubeSummary != null ? #aggregates.sum(calc.handrailTubeSummary.values()) : calc.handrails}"></td>
-                <td>Transoms</td><td class="text-end fw-bold" th:text="${calc.transoms}"></td>
+                <td>Transoms <span class="text-muted small">(× 5ft)</span></td><td class="text-end fw-bold" th:text="${calc.transoms}"></td>
               </tr>
               <tr>
                 <td>Boards</td><td class="text-end fw-bold" th:text="${calc.boards}"></td>
@@ -260,6 +260,47 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Delivery summary (yard operator) — total tubes & boards per size -->
+          <div th:if="${calc.tubeDeliverySummary != null and !calc.tubeDeliverySummary.isEmpty()}" class="mt-3">
+            <p class="fw-bold small text-uppercase mb-1" style="color:#64748b;letter-spacing:.04em;">
+              <i class="bi bi-truck me-1" style="color:#16a34a;"></i>Delivery summary &mdash; total per size
+            </p>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <p class="small text-uppercase mb-1" style="color:#94a3b8;">Tubes (all categories)</p>
+                <table class="table table-sm mb-0">
+                  <thead class="table-light"><tr><th>Size</th><th class="text-end">Qty</th></tr></thead>
+                  <tbody>
+                    <tr th:each="entry : ${calc.tubeDeliverySummary}">
+                      <td class="small fw-semibold" th:text="${entry.key}"></td>
+                      <td class="small text-end fw-bold" th:text="${entry.value}"></td>
+                    </tr>
+                    <tr class="table-light fw-bold">
+                      <td class="small">TOTAL</td>
+                      <td class="small text-end" th:text="${#aggregates.sum(calc.tubeDeliverySummary.values())}"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="col-md-6" th:if="${calc.boardSummary != null and !calc.boardSummary.isEmpty()}">
+                <p class="small text-uppercase mb-1" style="color:#94a3b8;">Boards</p>
+                <table class="table table-sm mb-0">
+                  <thead class="table-light"><tr><th>Size</th><th class="text-end">Qty</th></tr></thead>
+                  <tbody>
+                    <tr th:each="entry : ${calc.boardSummary}">
+                      <td class="small fw-semibold" th:text="${entry.key}"></td>
+                      <td class="small text-end fw-bold" th:text="${entry.value}"></td>
+                    </tr>
+                    <tr class="table-light fw-bold">
+                      <td class="small">TOTAL</td>
+                      <td class="small text-end" th:text="${#aggregates.sum(calc.boardSummary.values())}"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           <!-- Ledger tubes per wall -->

@@ -50,6 +50,7 @@ public class PdfExportService {
             addLiftsTable(document, calc);
             addMainComponents(document, calc);
             addFittings(document, calc);
+            addDeliverySummary(document, calc);
             addTubeBreakdown(document, calc);
             addBoardBreakdown(document, calc);
 
@@ -134,7 +135,7 @@ public class PdfExportService {
         addMaterialRow(t, "Standards",              calc.getStandards());
         addMaterialRow(t, "Ledgers",                ledgersTotal);
         addMaterialRow(t, "Handrails",              handrailsTotal);
-        addMaterialRow(t, "Transoms",               calc.getTransoms());
+        addMaterialRow(t, "Transoms (5ft)",         calc.getTransoms());
         addMaterialRow(t, "Boards",                 calc.getBoards());
         addMaterialRow(t, "Base plates",            calc.getBasePlates());
         addMaterialRow(t, "Sole boards",            calc.getSoleBoards());
@@ -162,6 +163,73 @@ public class PdfExportService {
         }
         doc.add(t);
         spacer(doc, 10);
+    }
+
+    private void addDeliverySummary(Document doc, Calculation calc) throws DocumentException {
+        Map<String, Integer> tubes = calc.getTubeDeliverySummary();
+        Map<String, Integer> boards = calc.getBoardSummary();
+
+        boolean hasTubes  = tubes  != null && !tubes.isEmpty();
+        boolean hasBoards = boards != null && !boards.isEmpty();
+        if (!hasTubes && !hasBoards) return;
+
+        addSectionHeading(doc, "Delivery Summary — Tubes & Boards by Size");
+
+        // Side-by-side: tubes on left, boards on right
+        PdfPTable wrap = new PdfPTable(2);
+        wrap.setWidthPercentage(100);
+        wrap.setSpacingAfter(10);
+
+        // Tubes column
+        PdfPCell tubesCell = new PdfPCell();
+        tubesCell.setBorder(0);
+        tubesCell.setPaddingRight(8);
+        if (hasTubes) {
+            PdfPTable t = new PdfPTable(new float[]{2, 2});
+            t.setWidthPercentage(100);
+            addHeaderRow(t, "Tubes (all)", "Total qty");
+            int total = 0;
+            for (Map.Entry<String, Integer> e : tubes.entrySet()) {
+                addRow(t, e.getKey(), String.valueOf(e.getValue()));
+                total += e.getValue();
+            }
+            addTotalRow(t, "TOTAL", total);
+            tubesCell.addElement(t);
+        }
+        wrap.addCell(tubesCell);
+
+        // Boards column
+        PdfPCell boardsCell = new PdfPCell();
+        boardsCell.setBorder(0);
+        boardsCell.setPaddingLeft(8);
+        if (hasBoards) {
+            PdfPTable b = new PdfPTable(new float[]{2, 2});
+            b.setWidthPercentage(100);
+            addHeaderRow(b, "Boards", "Total qty");
+            int total = 0;
+            for (Map.Entry<String, Integer> e : boards.entrySet()) {
+                addRow(b, e.getKey(), String.valueOf(e.getValue()));
+                total += e.getValue();
+            }
+            addTotalRow(b, "TOTAL", total);
+            boardsCell.addElement(b);
+        }
+        wrap.addCell(boardsCell);
+
+        doc.add(wrap);
+    }
+
+    private void addTotalRow(PdfPTable t, String label, int total) {
+        Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.BLACK);
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, boldFont));
+        labelCell.setPadding(4);
+        labelCell.setBackgroundColor(ZEBRA_BG);
+        PdfPCell valCell = new PdfPCell(new Phrase(String.valueOf(total), boldFont));
+        valCell.setPadding(4);
+        valCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        valCell.setBackgroundColor(ZEBRA_BG);
+        t.addCell(labelCell);
+        t.addCell(valCell);
     }
 
     private void addTubeBreakdown(Document doc, Calculation calc) throws DocumentException {
