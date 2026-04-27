@@ -61,6 +61,10 @@ public class PdfExportService {
             addInputParameters(document, calc);
             addHouseDiagram(document, writer, calc);   // top view su TOP/BOTTOM badge'iais
             addLiftsTable(document, calc);
+
+            // Force page break — Main Components + Fittings turi pradėti naują puslapį,
+            // kad nesimaišytų su House Diagram ir Lifts iš pirmojo puslapio
+            document.newPage();
             addMainComponents(document, calc);
             addFittings(document, calc);
             // Force page break — Loading Bay + Ladder Tower on a fresh page
@@ -197,9 +201,9 @@ public class PdfExportService {
     private void addHouseDiagram(Document doc, PdfWriter writer, Calculation calc) throws DocumentException {
         addSectionHeading(doc, "House Shape — Top View (TOP / BOTTOM ledger scenario)");
 
-        // Drobės dydis (px) — toks pats kaip JS (svgW/svgH)
+        // Drobės dydis (px) — aukštesnis nei JS variantas, kad būtų vietos badge'ams ir legendai
         final float SVG_W = 500f;
-        final float SVG_H = 320f;
+        final float SVG_H = 360f;
         PdfTemplate tpl = writer.getDirectContent().createTemplate(SVG_W, SVG_H);
 
         // --- Geometrija (lygiavertė calculator.html JS logikai) ---
@@ -320,11 +324,11 @@ public class PdfExportService {
             float mySvg = (p1[1] + p2[1]) / 2f + ny * OFF;
             float myPdf = flipY(mySvg, SVG_H);
 
-            // Badge'o offset:
-            //  • horizontalioms sienoms (top/bottom): badge virš/po tekstu (ny kryptimi)
+            // Badge'o offset (didesnis nei JS variantas — kad badge nepersidengtų su label tekstu):
+            //  • horizontalioms sienoms (top/bottom): badge virš/po tekstu (ny kryptimi, 22px)
             //  • vertikalioms sienoms (left/right): badge virš teksto (kad nepersidengtų su plačiu Width tekstu)
             boolean vertical = (nx != 0);
-            float badgeDySvg = vertical ? -14f : ny * 14f;
+            float badgeDySvg = vertical ? -22f : ny * 22f;
             // Apverciam Y į PDF koordinates
             float badgeDyPdf = -badgeDySvg;
 
@@ -349,7 +353,8 @@ public class PdfExportService {
 
         // --- 5. Legenda apačioje ---
         // Žalia kortelė "TOP" + oranžinė kortelė "BOTTOM"
-        float legendY = 14f;
+        // Y=4 — kad nepersidengtų su apatinės sienos label/badge'ais
+        float legendY = 4f;
         // Žalias kvadratėlis
         tpl.setColorFill(greenC);
         tpl.rectangle(SVG_W / 2f - 90f, legendY, 12f, 12f);
