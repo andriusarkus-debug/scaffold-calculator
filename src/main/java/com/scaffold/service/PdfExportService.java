@@ -5,16 +5,22 @@ import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.FontFactory;
+import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.BaseFont;
+import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfTemplate;
 import com.lowagie.text.pdf.PdfWriter;
 import com.scaffold.entity.Calculation;
 import com.scaffold.entity.CalculationLift;
 import com.scaffold.model.LadderTowerResult;
 import com.scaffold.model.LoadingBayResult;
+import com.scaffold.model.enums.HouseShape;
+import com.scaffold.model.enums.LedgerScenario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -48,11 +54,12 @@ public class PdfExportService {
     public byte[] generatePdf(Calculation calc) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4, 36, 36, 36, 36);
-            PdfWriter.getInstance(document, baos);
+            PdfWriter writer = PdfWriter.getInstance(document, baos);
             document.open();
 
             addTitle(document, calc);
             addInputParameters(document, calc);
+            addHouseDiagram(document, writer, calc);   // top view su TOP/BOTTOM badge'iais
             addLiftsTable(document, calc);
             addMainComponents(document, calc);
             addFittings(document, calc);
@@ -180,6 +187,226 @@ public class PdfExportService {
         }
         doc.add(t);
         spacer(doc, 10);
+    }
+
+    // --- House diagram (top view su TOP/BOTTOM ledger scenario badge'iais) ---
+    //
+    // Atvaizdas perkeltas iš calculator.html JS (function drawHouse). Naudojam OpenPDF
+    // PdfTemplate kaip "drobę" — piešiam ant jos žemo lygio piešimo API (PdfContentByte),
+    // tada įdedam į dokumentą kaip Image. Y-ašis apverčiama (SVG y auga žemyn, PDF y aukštyn).
+    private void addHouseDiagram(Document doc, PdfWriter writer, Calculation calc) throws DocumentException {
+        addSectionHeading(doc, "House Shape — Top View (TOP / BOTTOM ledger scenario)");
+
+        // Drobės dydis (px) — toks pats kaip JS (svgW/svgH)
+        final float SVG_W = 500f;
+        final float SVG_H = 320f;
+        PdfTemplate tpl = writer.getDirectContent().createTemplate(SVG_W, SVG_H);
+
+        // --- Geometrija (lygiavertė calculator.html JS logikai) ---
+        double L  = calc.getHouseLength() > 0 ? calc.getHouseLength() : 10;
+        double W  = calc.getHouseWidth()  > 0 ? calc.getHouseWidth()  : 6;
+        double cl = calc.getLCutLength();
+        double cw = calc.getLCutWidth();
+        boolean isL = calc.getHouseShape() == HouseShape.L_SHAPE && cl > 0 && cw > 0;
+
+        final float pad = 62f;
+        double scale = Math.min((SVG_W - pad * 2) / L, (SVG_H - pad * 2) / W);
+        float pxL  = (float)(L  * scale);
+        float pxW  = (float)(W  * scale);
+        float pxCl = (float)(cl * scale);
+        float pxCw = (float)(cw * scale);
+        float ox = (SVG_W - pxL) / 2f;
+        float oy = (SVG_H - pxW) / 2f;
+
+        // Kampų taškai (SVG koordinatėse — y auga žemyn)
+        float[][] pts;
+        if (!isL) {
+            pts = new float[][] {
+                    {ox,        oy + pxW},
+                    {ox + pxL,  oy + pxW},
+                    {ox + pxL,  oy      },
+                    {ox,        oy      }
+            };
+        } else {
+            pts = new float[][] {
+                    {ox,                 oy + pxW },
+                    {ox + pxL,           oy + pxW },
+                    {ox + pxL,           oy + pxCw},
+                    {ox + pxL - pxCl,    oy + pxCw},
+                    {ox + pxL - pxCl,    oy       },
+                    {ox,                 oy       }
+            };
+        }
+
+        LedgerScenario scenario = calc.getLedgerScenario() != null
+                ? calc.getLedgerScenario() : LedgerScenario.SCENARIO_ONE;
+
+        // --- Spalvos ---
+        Color greenC  = new Color(22, 163, 74);   // #16a34a — TOP
+        Color orangeC = new Color(234, 88, 12);   // #ea580c — BOTTOM
+        Color navyC   = new Color(30, 58, 138);   // kampų taškai
+        Color fillC   = new Color(239, 246, 255); // šviesiai mėlynas namo užpildas
+        Color labelC  = new Color(55, 65, 81);    // sienos pavadinimo tekstas
+
+        // --- 1. Užpildome namo paviršių ---
+        tpl.setColorFill(fillC);
+        tpl.moveTo(pts[0][0], flipY(pts[0][1], SVG_H));
+        for (int i = 1; i < pts.length; i++) {
+            tpl.lineTo(pts[i][0], flipY(pts[i][1], SVG_H));
+        }
+        tpl.closePath();
+        tpl.fill();
+
+        // --- 2. Sienų linijos su TOP/BOTTOM spalvomis ---
+        tpl.setLineWidth(3f);
+        tpl.setLineCap(PdfContentByte.LINE_CAP_ROUND);
+        for (int i = 0; i < pts.length; i++) {
+            boolean top = isTopFace(i, scenario);
+            tpl.setColorStroke(top ? greenC : orangeC);
+            float[] p1 = pts[i], p2 = pts[(i + 1) % pts.length];
+            tpl.moveTo(p1[0], flipY(p1[1], SVG_H));
+            tpl.lineTo(p2[0], flipY(p2[1], SVG_H));
+            tpl.stroke();
+        }
+
+        // --- 3. Kampų taškai (navy su baltu apvadu) ---
+        tpl.setLineWidth(1.5f);
+        for (float[] p : pts) {
+            tpl.setColorFill(navyC);
+            tpl.setColorStroke(Color.WHITE);
+            tpl.circle(p[0], flipY(p[1], SVG_H), 4f);
+            tpl.fillStroke();
+        }
+
+        // --- 4. Sienų etiketės ir T/B badge'iai ---
+        BaseFont bf     = FontFactory.getFont(FontFactory.HELVETICA).getBaseFont();
+        BaseFont bfBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD).getBaseFont();
+
+        String[][] faces;
+        int[][] normals;
+        if (!isL) {
+            String lStr = String.format("%.2fm", L);
+            String wStr = String.format("%.2fm", W);
+            faces = new String[][] {
+                    {"Length (L)", lStr},
+                    {"Width (W)",  wStr},
+                    {"Length (L)", lStr},
+                    {"Width (W)",  wStr}
+            };
+            normals = new int[][] {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+        } else {
+            faces = new String[][] {
+                    {"Length (L)", String.format("%.2fm", L)},
+                    {"W−cut.w.",   String.format("%.2fm", W - cw)},
+                    {"Cut length", String.format("%.2fm", cl)},
+                    {"Cut width",  String.format("%.2fm", cw)},
+                    {"L−cut.l.",   String.format("%.2fm", L - cl)},
+                    {"Width (W)",  String.format("%.2fm", W)}
+            };
+            normals = new int[][] {{0, 1}, {1, 0}, {0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+        }
+
+        final float OFF = 22f;
+        for (int i = 0; i < pts.length; i++) {
+            float[] p1 = pts[i], p2 = pts[(i + 1) % pts.length];
+            boolean top = isTopFace(i, scenario);
+            Color color = top ? greenC : orangeC;
+            String badge = top ? "T" : "B";
+            int nx = normals[i][0];
+            int ny = normals[i][1];
+
+            // Etiketės pozicija (SVG koordinatės)
+            float mx = (p1[0] + p2[0]) / 2f + nx * OFF;
+            float mySvg = (p1[1] + p2[1]) / 2f + ny * OFF;
+            float myPdf = flipY(mySvg, SVG_H);
+
+            // Badge'o offset:
+            //  • horizontalioms sienoms (top/bottom): badge virš/po tekstu (ny kryptimi)
+            //  • vertikalioms sienoms (left/right): badge virš teksto (kad nepersidengtų su plačiu Width tekstu)
+            boolean vertical = (nx != 0);
+            float badgeDySvg = vertical ? -14f : ny * 14f;
+            // Apverciam Y į PDF koordinates
+            float badgeDyPdf = -badgeDySvg;
+
+            // Badge apskritimas
+            tpl.setColorFill(color);
+            tpl.circle(mx, myPdf + badgeDyPdf, 7f);
+            tpl.fill();
+
+            // Badge raidė (T arba B) baltai centre
+            drawCenteredText(tpl, bfBold, 9, Color.WHITE, badge, mx, myPdf + badgeDyPdf);
+
+            // Sienos pavadinimas (jei yra value — virš jo)
+            boolean hasVal = faces[i][1] != null;
+            float nameYpdf = hasVal ? myPdf + 7 : myPdf; // SVG: name virš value (my-7) → PDF: my+7
+            drawCenteredText(tpl, bf, 10, labelC, faces[i][0], mx, nameYpdf);
+
+            // Sienos vertė (paspalvinta)
+            if (hasVal) {
+                drawCenteredText(tpl, bfBold, 11, color, faces[i][1], mx, myPdf - 7);
+            }
+        }
+
+        // --- 5. Legenda apačioje ---
+        // Žalia kortelė "TOP" + oranžinė kortelė "BOTTOM"
+        float legendY = 14f;
+        // Žalias kvadratėlis
+        tpl.setColorFill(greenC);
+        tpl.rectangle(SVG_W / 2f - 90f, legendY, 12f, 12f);
+        tpl.fill();
+        drawCenteredText(tpl, bfBold, 8, Color.WHITE, "T", SVG_W / 2f - 84f, legendY + 5f);
+        // Tekstas
+        drawText(tpl, bf, 9, labelC, "TOP (green walls — top ledger scenario)",
+                SVG_W / 2f - 73f, legendY + 3f);
+
+        // Oranžinis kvadratėlis
+        tpl.setColorFill(orangeC);
+        tpl.rectangle(SVG_W / 2f + 100f, legendY, 12f, 12f);
+        tpl.fill();
+        drawCenteredText(tpl, bfBold, 8, Color.WHITE, "B", SVG_W / 2f + 106f, legendY + 5f);
+        drawText(tpl, bf, 9, labelC, "BOTTOM (orange walls)",
+                SVG_W / 2f + 117f, legendY + 3f);
+
+        // --- Įdedam template kaip Image ---
+        try {
+            Image img = Image.getInstance(tpl);
+            img.setAlignment(Element.ALIGN_CENTER);
+            doc.add(img);
+        } catch (Exception e) {
+            throw new DocumentException(e);
+        }
+        spacer(doc, 10);
+    }
+
+    private boolean isTopFace(int faceIdx, LedgerScenario scenario) {
+        return scenario == LedgerScenario.SCENARIO_ONE
+                ? (faceIdx % 2 == 0)
+                : (faceIdx % 2 != 0);
+    }
+
+    private float flipY(float svgY, float canvasHeight) {
+        return canvasHeight - svgY;
+    }
+
+    /** Piešia tekstą centre nurodytoje (x, y) vietoje. y — apytikrė vertikali centro pozicija. */
+    private void drawCenteredText(PdfContentByte cb, BaseFont font, float size, Color color,
+                                  String text, float x, float y) {
+        cb.beginText();
+        cb.setFontAndSize(font, size);
+        cb.setColorFill(color);
+        // Vertikalus centravimas — atimame ~30% nuo size, kad baseline būtų žemiau centro
+        cb.showTextAligned(Element.ALIGN_CENTER, text, x, y - size * 0.3f, 0);
+        cb.endText();
+    }
+
+    /** Piešia tekstą kairėje nurodyto x,y. */
+    private void drawText(PdfContentByte cb, BaseFont font, float size, Color color,
+                          String text, float x, float y) {
+        cb.beginText();
+        cb.setFontAndSize(font, size);
+        cb.setColorFill(color);
+        cb.showTextAligned(Element.ALIGN_LEFT, text, x, y, 0);
+        cb.endText();
     }
 
     private void addLoadingBay(Document doc, Calculation calc) throws DocumentException {
